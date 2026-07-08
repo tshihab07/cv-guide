@@ -1,0 +1,139 @@
+{% extends 'cv_app/base.html' %}
+
+{% block title %}Create Your CV{% endblock %}
+
+{% block content %}
+<section class="builder-shell">
+
+    <div class="builder-sidebar">
+        <h2>Build your CV</h2>
+        <ol>
+            <li class="{% if step == 1 %}active{% endif %}">Personal Info</li>
+            <li class="{% if step == 2 %}active{% endif %}">Job Requirements</li>
+            <li class="{% if step == 3 %}active{% endif %}">Skills & Projects</li>
+            <li class="{% if step == 4 %}active{% endif %}">Experience</li>
+            <li class="{% if step == 5 %}active{% endif %}">Education</li>
+            <li class="{% if step == 6 %}active{% endif %}">Preview</li>
+        </ol>
+        <div class="mini-card">
+            <p>Everything stays in your current session and is not stored long term.</p>
+        </div>
+    </div>
+    <div class="builder-form">
+        <h1>Step {{ step }} of 6</h1>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="step" value="{{ step }}" />
+            {% if step == 1 %}
+                <div class="form-grid">
+                    <label>Full name<input name="full_name" value="{{ data.personal.full_name|default:'' }}" required /></label>
+                    <label>Email<input type="email" name="email" value="{{ data.personal.email|default:'' }}" required /></label>
+                    <label>Phone<input name="phone" value="{{ data.personal.phone|default:'' }}" required /></label>
+                    <label>Location<input name="location" value="{{ data.personal.location|default:'' }}" /></label>
+                    <label>LinkedIn<input name="linkedin" value="{{ data.personal.linkedin|default:'' }}" /></label>
+                    <label>GitHub<input name="github" value="{{ data.personal.github|default:'' }}" /></label>
+                </div>
+            {% elif step == 2 %}
+                <div class="form-grid">
+                    <label>Job title<input name="job_title" value="{{ data.job_requirements.job_title|default:'' }}" required /></label>
+                    <label>Target role<input name="role" value="{{ data.job_requirements.role|default:'' }}" /></label>
+                    <label>Job description<textarea name="job_description" rows="5">{{ data.job_requirements.job_description|default:'' }}</textarea></label>
+                    <label>Keywords (comma separated)<input name="keywords" value="{{ data.job_requirements.keywords|default:'' }}" /></label>
+                    <label>Required skills (comma separated)<input name="required_skills" value="{{ data.job_requirements.required_skills|default:'' }}" /></label>
+                </div>
+            {% elif step == 3 %}
+                <div>
+                    <h3 style="margin-top:0;">Projects (add multiple)</h3>
+                    <div id="project-rows">
+                        <div class="project-row form-grid">
+                            <label>Project Title<input name="project_title[]" placeholder="Intelligent Loan Approval Prediction System" /></label>
+                            <label>Project Category
+                                <select name="project_category[]">
+                                    <option value="Machine Learning">Machine Learning</option>
+                                    <option value="Python">Python</option>
+                                    <option value="Django">Django</option>
+                                    <option value="Flask">Flask</option>
+                                    <option value="FastAPI">FastAPI</option>
+                                    <option value="ReactJS">ReactJS</option>
+                                    <option value="AngularJS">AngularJS</option>
+                                    <option value="Event Management">Event Management</option>
+                                    <option value="Data analysis">Data analysis</option>
+                                    <option value="Backend Development">Backend Development</option>
+                                    <option value="Web Scraping">Web Scraping</option>
+                                    <option value="Automation">Automation</option>
+                                </select>
+                            </label>
+                            <label>Project Description<textarea name="project_description[]" rows="3" placeholder="Add impact bullets or feature summary..."></textarea></label>
+                            <label>Source Code Link (optional)<input name="source_code_link[]" placeholder="https://github.com/..." /></label>
+                            <label>Project Link (optional)<input name="project_link[]" placeholder="https://your-deployed-url.com/" /></label>
+                        </div>
+                    </div>
+                    <div class="form-actions" style="margin-top:12px;">
+                        <button type="button" class="btn btn-secondary" onclick="addProjectRow()">Add Project</button>
+                    </div>
+                </div>
+
+<script>
+function addProjectRow(){
+  const container = document.getElementById('project-rows');
+  const template = container.children[0].cloneNode(true);
+  template.querySelectorAll('input, textarea').forEach(i=>{i.value='';});
+  container.appendChild(template);
+}
+</script>
+
+<script>
+function addEducationRow(){
+  const container = document.getElementById('education-rows');
+  const template = container.children[0].cloneNode(true);
+  template.querySelectorAll('input').forEach(i=>{i.value='';});
+  container.appendChild(template);
+}
+</script>
+
+            {% elif step == 4 %}
+                <div class="form-grid">
+                    <label>Company<input name="company" value="{{ data.experience.company|default:'' }}" /></label>
+                    <label>Role<input name="role" value="{{ data.experience.role|default:'' }}" /></label>
+                    <label>Duration<input name="duration" value="{{ data.experience.duration|default:'' }}" /></label>
+                    <label>Responsibilities<textarea name="responsibilities" rows="5">{{ data.experience.responsibilities|default:'' }}</textarea></label>
+                </div>
+            {% elif step == 5 %}
+                <div>
+                    <h3 style="margin-top:0;">Education (add multiple)</h3>
+                    <div id="education-rows">
+                        
+                        <div class="edu-row form-grid">
+                            <label>Degree<input name="education_degree[]" placeholder="B.Sc in Computer Science and Engineering" /></label>
+                            <label>Institution<input name="education_institution[]" placeholder="National University, Bangladesh" /></label>
+                            <label>Passing Year<input name="education_passing_year[]" placeholder="2023" /></label>
+                            <label>GPA/CGPA (e.g., 3.14)<input name="education_gpa_cgpa[]" placeholder="3.14" /></label>
+                            <label>GPA/CGPA Max (e.g., 4.00)<input name="education_gpa_max[]" placeholder="4.00" /></label>
+                            <label>Details<input name="education_details[]" placeholder="" /></label>
+                        </div>
+                    </div>
+                    <div class="form-actions" style="margin-top:12px;">
+                        <button type="button" class="btn btn-secondary" onclick="addEducationRow()">Add Education</button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="preview-summary">
+                    <h3>Ready to preview</h3>
+                    <p>Your CV will be generated from the information you entered. Review it and download it as PDF or DOCX.</p>
+                </div>
+            {% endif %}
+            <div class="form-actions">
+                {% if step > 1 %}
+                    <a href="/create/?step={{ step|add:'-1' }}" class="btn btn-secondary">Back</a>
+                {% endif %}
+                <button type="submit" class="btn">{% if step < 5 %}Save & Next{% else %}Generate Preview{% endif %}</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
