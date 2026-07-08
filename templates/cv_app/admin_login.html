@@ -1,0 +1,18 @@
+{% extends 'cv_app/base.html' %}
+
+{% block title %}CV Admin Login{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="auth-card">
+        <h1>CV Admin Login</h1>
+        {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <label>Username<input name="username" required /></label>
+            <label>Password<input type="password" name="password" required /></label>
+            <button type="submit" class="btn">Sign In</button>
+        </form>
+    </div>
+</section>
+{% endblock %}
