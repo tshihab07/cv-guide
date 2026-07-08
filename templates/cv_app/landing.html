@@ -1,0 +1,140 @@
+{% extends 'cv_app/base.html' %}
+{% load cv_tags %}
+
+{% block title %}CVGuide | ATS-Friendly CV Builder{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <p class="eyebrow">No signup • No data storage • ATS friendly</p>
+        <h1>{{ content.hero_title }}</h1>
+        <p class="hero-subtitle">{{ content.hero_subtitle }}</p>
+        <div class="hero-actions">
+            <a href="/create/" class="btn btn-large">{{ content.hero_cta_text }}</a>
+            <a href="#features" class="btn btn-secondary">Explore Features</a>
+        </div>
+        <div class="notice-box">{{ content.safety_notice }}</div>
+    </div>
+</section>
+
+<section id="features" class="section">
+    <div class="section-heading">
+        <p class="eyebrow">Features</p>
+        <h2>{{ content.features_title }}</h2>
+        <p>{{ content.features_subtitle }}</p>
+    </div>
+    <div class="card-grid">
+        {% for feature in features %}
+        <article class="card">
+            <div class="icon">{{ feature.icon }}</div>
+            <h3>{{ feature.title }}</h3>
+            <p>{{ feature.description }}</p>
+        </article>
+        {% empty %}
+        <article class="card">
+            <div class="icon">⚡</div>
+            <h3>ATS optimized</h3>
+            <p>Generate a clean, keyword-rich CV that recruiters can scan easily.</p>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section id="how-it-works" class="section alt-bg">
+    <div class="section-heading">
+        <p class="eyebrow">How it Works</p>
+        <h2>{{ content.process_title }}</h2>
+        <p>{{ content.process_subtitle }}</p>
+    </div>
+    <div class="card-grid steps-grid">
+        {% for step in steps %}
+        <article class="step-card">
+            <span class="step-number">0{{ forloop.counter }}</span>
+            <h3>{{ step.title }}</h3>
+            <p>{{ step.description }}</p>
+        </article>
+        {% empty %}
+        <article class="step-card">
+            <span class="step-number">01</span>
+            <h3>Share your details</h3>
+            <p>Add your contact information, job requirements, and key experience.</p>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section">
+    <div class="section-heading">
+        <p class="eyebrow">What You Get</p>
+        <h2>{{ content.benefits_title }}</h2>
+        <p>{{ content.benefits_subtitle }}</p>
+    </div>
+    <div class="benefits-list">
+        {% for benefit in benefits %}
+        <div class="benefit-item">
+            <span class="icon">{{ benefit.icon }}</span>
+            <div>
+                <h3>{{ benefit.title }}</h3>
+                <p>{{ benefit.description }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <div class="benefit-item">
+            <span class="icon">🎯</span>
+            <div>
+                <h3>Keyword-targeted content</h3>
+                <p>Match your CV to the job description with relevant keywords and phrases.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section alt-bg">
+    <div class="section-heading">
+        <p class="eyebrow">Testimonials</p>
+        <h2>{{ content.testimonials_title }}</h2>
+    </div>
+    <div class="card-grid">
+        {% for testimonial in testimonials %}
+        <article class="card quote-card">
+            <p>“{{ testimonial.quote }}”</p>
+            <h3>{{ testimonial.author }}</h3>
+            <span>{{ testimonial.role }}</span>
+        </article>
+        {% empty %}
+        <article class="card quote-card">
+            <p>“I landed an interview within days after using this format.”</p>
+            <h3>Rina M.</h3>
+            <span>Product Designer</span>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+
+<section id="faq" class="section">
+    <div class="section-heading">
+        <p class="eyebrow">FAQ</p>
+        <h2>{{ content.faq_title }}</h2>
+    </div>
+    <div class="faq-list">
+        {% for item in faqs %}
+        <details class="faq-item">
+            <summary>{{ item.question }}</summary>
+            <p>{{ item.answer }}</p>
+        </details>
+        {% empty %}
+        <details class="faq-item">
+            <summary>Is my data safe?</summary>
+            <p>Yes. We do not store your information beyond the current session and you can download your CV immediately.</p>
+        </details>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="section cta-section">
+    <h2>Ready to build a CV that fits the role?</h2>
+    <p>Generate an ATS-friendly document in minutes and download it as PDF or DOCX.</p>
+    <a href="/create/" class="btn btn-large">{{ content.hero_cta_text }}</a>
+</section>
+{% endblock %}
