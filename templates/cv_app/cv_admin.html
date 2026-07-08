@@ -1,0 +1,63 @@
+{% extends 'cv_app/base.html' %}
+
+{% block title %}CV Admin Panel{% endblock %}
+
+{% block content %}
+<section class="admin-shell">
+    <div class="admin-header">
+        <div>
+            <p class="eyebrow">Custom control panel</p>
+            <h1>Landing page admin</h1>
+        </div>
+        <a href="/cv-admin/logout/" class="btn btn-secondary">Logout</a>
+    </div>
+
+    <form method="post" class="admin-form">
+        {% csrf_token %}
+        <h2>Main content</h2>
+        {{ main_form.as_p }}
+
+        <h2>Features</h2>
+        {{ features_formset.management_form }}
+        {% for form in features_formset %}
+            <div class="admin-item">
+                {{ form.as_p }}
+            </div>
+        {% endfor %}
+
+        <h2>How it works</h2>
+        {{ steps_formset.management_form }}
+        {% for form in steps_formset %}
+            <div class="admin-item">
+                {{ form.as_p }}
+            </div>
+        {% endfor %}
+
+        <h2>Benefits</h2>
+        {{ benefits_formset.management_form }}
+        {% for form in benefits_formset %}
+            <div class="admin-item">
+                {{ form.as_p }}
+            </div>
+        {% endfor %}
+
+        <h2>Testimonials</h2>
+        {{ testimonials_formset.management_form }}
+        {% for form in testimonials_formset %}
+            <div class="admin-item">
+                {{ form.as_p }}
+            </div>
+        {% endfor %}
+
+        <h2>FAQ</h2>
+        {{ faqs_formset.management_form }}
+        {% for form in faqs_formset %}
+            <div class="admin-item">
+                {{ form.as_p }}
+            </div>
+        {% endfor %}
+
+        <button class="btn" type="submit">Save changes</button>
+    </form>
+</section>
+{% endblock %}
