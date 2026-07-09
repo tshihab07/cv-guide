@@ -7,20 +7,22 @@
 
     <div class="builder-sidebar">
         <h2>Build your CV</h2>
-        <ol>
+<ol>
             <li class="{% if step == 1 %}active{% endif %}">Personal Info</li>
             <li class="{% if step == 2 %}active{% endif %}">Job Requirements</li>
-            <li class="{% if step == 3 %}active{% endif %}">Skills & Projects</li>
-            <li class="{% if step == 4 %}active{% endif %}">Experience</li>
-            <li class="{% if step == 5 %}active{% endif %}">Education</li>
-            <li class="{% if step == 6 %}active{% endif %}">Preview</li>
+            <li class="{% if step == 3 %}active{% endif %}">Skills</li>
+            <li class="{% if step == 4 %}active{% endif %}">Projects</li>
+            <li class="{% if step == 5 %}active{% endif %}">Experience</li>
+            <li class="{% if step == 6 %}active{% endif %}">Education</li>
+            <li class="{% if step == 7 %}active{% endif %}">Preview</li>
         </ol>
         <div class="mini-card">
             <p>Everything stays in your current session and is not stored long term.</p>
         </div>
     </div>
+
     <div class="builder-form">
-        <h1>Step {{ step }} of 6</h1>
+        <h1>Step {{ step }} of 7</h1>
         {% if messages %}
             {% for message in messages %}
                 <div class="alert">{{ message }}</div>
@@ -29,6 +31,7 @@
         <form method="post">
             {% csrf_token %}
             <input type="hidden" name="step" value="{{ step }}" />
+
             {% if step == 1 %}
                 <div class="form-grid">
                     <label>Full name<input name="full_name" value="{{ data.personal.full_name|default:'' }}" required /></label>
@@ -37,103 +40,193 @@
                     <label>Location<input name="location" value="{{ data.personal.location|default:'' }}" /></label>
                     <label>LinkedIn<input name="linkedin" value="{{ data.personal.linkedin|default:'' }}" /></label>
                     <label>GitHub<input name="github" value="{{ data.personal.github|default:'' }}" /></label>
+                    <label>Portfolio Website<input name="portfolio" value="{{ data.personal.portfolio|default:'' }}" /></label>
                 </div>
+
             {% elif step == 2 %}
                 <div class="form-grid">
-                    <label>Job title<input name="job_title" value="{{ data.job_requirements.job_title|default:'' }}" required /></label>
-                    <label>Target role<input name="role" value="{{ data.job_requirements.role|default:'' }}" /></label>
-                    <label>Job description<textarea name="job_description" rows="5">{{ data.job_requirements.job_description|default:'' }}</textarea></label>
+                    <label>Job Title<input name="job_title" value="{{ data.job_requirements.job_title|default:'' }}" required /></label>
+                    <label>Target Role<input name="role" value="{{ data.job_requirements.role|default:'' }}" /></label>
+                    <label>Job Description<textarea name="job_description" rows="6">{{ data.job_requirements.job_description|default:'' }}</textarea></label>
                     <label>Keywords (comma separated)<input name="keywords" value="{{ data.job_requirements.keywords|default:'' }}" /></label>
-                    <label>Required skills (comma separated)<input name="required_skills" value="{{ data.job_requirements.required_skills|default:'' }}" /></label>
+                    <label>Required Skills (comma separated)<input name="required_skills" value="{{ data.job_requirements.required_skills|default:'' }}" /></label>
                 </div>
+                <div class="mini-card" style="margin-top: 16px;">
+                    <p><strong>Tip:</strong> Paste the job description and requirements. Skills will be auto-extracted and categorized in the next step.</p>
+                </div>
+
             {% elif step == 3 %}
+                <div>
+                    <h3 style="margin-top:0;">Technical Skills (Auto-extracted, editable)</h3>
+                    <p class="mini-card">Skills are automatically extracted from the job requirements. You can add, remove, or modify categories and skills below.</p>
+                    
+                    <div id="skill-category-rows">
+                        {% for cat in data.skill_categories %}
+                        <div class="skill-category-row form-grid" style="margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                            <label>Category
+                                <select name="skill_category[]" class="form-control">
+                                    {% for default_cat in default_skill_categories %}
+                                        <option value="{{ default_cat }}" {% if default_cat == cat.category %}selected{% endif %}>{{ default_cat }}</option>
+                                    {% endfor %}
+                                    <option value="Other" {% if cat.category not in default_skill_categories %}selected{% endif %}>Other</option>
+                                </select>
+                            </label>
+                            <label>Skills (comma separated)<textarea name="skill_items[]" rows="2">{{ cat.items }}</textarea></label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-actions" style="margin-top:12px;">
+                        <button type="button" class="btn btn-secondary" onclick="addSkillCategoryRow()">Add Skill Category</button>
+                    </div>
+                </div>
+
+            {% elif step == 4 %}
                 <div>
                     <h3 style="margin-top:0;">Projects (add multiple)</h3>
                     <div id="project-rows">
-                        <div class="project-row form-grid">
-                            <label>Project Title<input name="project_title[]" placeholder="Intelligent Loan Approval Prediction System" /></label>
-                            <label>Project Category
-                                <select name="project_category[]">
-                                    <option value="Machine Learning">Machine Learning</option>
-                                    <option value="Python">Python</option>
-                                    <option value="Django">Django</option>
-                                    <option value="Flask">Flask</option>
-                                    <option value="FastAPI">FastAPI</option>
-                                    <option value="ReactJS">ReactJS</option>
-                                    <option value="AngularJS">AngularJS</option>
-                                    <option value="Event Management">Event Management</option>
-                                    <option value="Data analysis">Data analysis</option>
-                                    <option value="Backend Development">Backend Development</option>
-                                    <option value="Web Scraping">Web Scraping</option>
-                                    <option value="Automation">Automation</option>
-                                </select>
-                            </label>
-                            <label>Project Description<textarea name="project_description[]" rows="3" placeholder="Add impact bullets or feature summary..."></textarea></label>
-                            <label>Source Code Link (optional)<input name="source_code_link[]" placeholder="https://github.com/..." /></label>
-                            <label>Project Link (optional)<input name="project_link[]" placeholder="https://your-deployed-url.com/" /></label>
+                        {% for project in data.projects %}
+                        <div class="project-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                            <div class="form-grid">
+                                <label>Project Title<input name="project_title[]" value="{{ project.title }}" placeholder="Intelligent Loan Approval Prediction System" /></label>
+                                <label>Project Category
+                                    <select name="project_category[]">
+                                        <option value="Machine Learning" {% if project.category == "Machine Learning" %}selected{% endif %}>Machine Learning</option>
+                                        <option value="Python" {% if project.category == "Python" %}selected{% endif %}>Python</option>
+                                        <option value="Django" {% if project.category == "Django" %}selected{% endif %}>Django</option>
+                                        <option value="Flask" {% if project.category == "Flask" %}selected{% endif %}>Flask</option>
+                                        <option value="FastAPI" {% if project.category == "FastAPI" %}selected{% endif %}>FastAPI</option>
+                                        <option value="ReactJS" {% if project.category == "ReactJS" %}selected{% endif %}>ReactJS</option>
+                                        <option value="AngularJS" {% if project.category == "AngularJS" %}selected{% endif %}>AngularJS</option>
+                                        <option value="VueJS" {% if project.category == "VueJS" %}selected{% endif %}>VueJS</option>
+                                        <option value="Event Management" {% if project.category == "Event Management" %}selected{% endif %}>Event Management</option>
+                                        <option value="Data Analysis" {% if project.category == "Data Analysis" %}selected{% endif %}>Data Analysis</option>
+                                        <option value="Web Scraping" {% if project.category == "Web Scraping" %}selected{% endif %}>Web Scraping</option>
+                                        <option value="Automation" {% if project.category == "Automation" %}selected{% endif %}>Automation</option>
+                                        <option value="Backend Development" {% if project.category == "Backend Development" %}selected{% endif %}>Backend Development</option>
+                                        <option value="Frontend Development" {% if project.category == "Frontend Development" %}selected{% endif %}>Frontend Development</option>
+                                        <option value="Full Stack" {% if project.category == "Full Stack" %}selected{% endif %}>Full Stack</option>
+                                        <option value="Mobile Development" {% if project.category == "Mobile Development" %}selected{% endif %}>Mobile Development</option>
+                                        <option value="DevOps" {% if project.category == "DevOps" %}selected{% endif %}>DevOps</option>
+                                        <option value="Cloud Computing" {% if project.category == "Cloud Computing" %}selected{% endif %}>Cloud Computing</option>
+                                        <option value="Cybersecurity" {% if project.category == "Cybersecurity" %}selected{% endif %}>Cybersecurity</option>
+                                        <option value="Blockchain" {% if project.category == "Blockchain" %}selected{% endif %}>Blockchain</option>
+                                        <option value="IoT" {% if project.category == "IoT" %}selected{% endif %}>IoT</option>
+                                        <option value="Game Development" {% if project.category == "Game Development" %}selected{% endif %}>Game Development</option>
+                                        <option value="Desktop Application" {% if project.category == "Desktop Application" %}selected{% endif %}>Desktop Application</option>
+                                        <option value="Research" {% if project.category == "Research" %}selected{% endif %}>Research</option>
+                                        <option value="Academic Project" {% if project.category == "Academic Project" %}selected{% endif %}>Academic Project</option>
+                                        <option value="Other" {% if project.category == "Other" or project.category not in "Machine Learning Python Django Flask FastAPI ReactJS AngularJS VueJS Event Management Data Analysis Web Scraping Automation Backend Development Frontend Development Full Stack Mobile Development DevOps Cloud Computing Cybersecurity Blockchain IoT Game Development Desktop Application Research Academic Project Other" %}selected{% endif %}>Other</option>
+                                    </select>
+                                </label>
+                                <label>Project Description<textarea name="project_description[]" rows="4" placeholder="Performed EDA and feature engineering on financial datasets and by using advanced machine learning models(Decision Tree, GBM, etc), the system captures complex patterns&#10;Reduced predicted default risk by 86% using XGBoost with optuna optimization&#10;Ensure fair and consistent evaluation&#10;Cut manual screening time by 67% through automated ML pipeline">{{ project.description }}</textarea></label>
+                                <label>Source Code Link (optional)<input name="source_code_link[]" value="{{ project.source_code_link }}" placeholder="https://github.com/..." /></label>
+                                <label>Project Link (optional)<input name="project_link[]" value="{{ project.project_link }}" placeholder="https://your-deployed-url.com/" /></label>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
                     <div class="form-actions" style="margin-top:12px;">
                         <button type="button" class="btn btn-secondary" onclick="addProjectRow()">Add Project</button>
                     </div>
                 </div>
 
-<script>
-function addProjectRow(){
-  const container = document.getElementById('project-rows');
-  const template = container.children[0].cloneNode(true);
-  template.querySelectorAll('input, textarea').forEach(i=>{i.value='';});
-  container.appendChild(template);
-}
-</script>
-
-<script>
-function addEducationRow(){
-  const container = document.getElementById('education-rows');
-  const template = container.children[0].cloneNode(true);
-  template.querySelectorAll('input').forEach(i=>{i.value='';});
-  container.appendChild(template);
-}
-</script>
-
-            {% elif step == 4 %}
-                <div class="form-grid">
-                    <label>Company<input name="company" value="{{ data.experience.company|default:'' }}" /></label>
-                    <label>Role<input name="role" value="{{ data.experience.role|default:'' }}" /></label>
-                    <label>Duration<input name="duration" value="{{ data.experience.duration|default:'' }}" /></label>
-                    <label>Responsibilities<textarea name="responsibilities" rows="5">{{ data.experience.responsibilities|default:'' }}</textarea></label>
-                </div>
             {% elif step == 5 %}
+                <div>
+                    <h3 style="margin-top:0;">Experience (add multiple)</h3>
+                    <div id="experience-rows">
+                        {% for exp in data.experience %}
+                        <div class="experience-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                            <div class="form-grid">
+                                <label>Company<input name="experience_company[]" value="{{ exp.company }}" placeholder="ABC Technologies Ltd." /></label>
+                                <label>Role<input name="experience_role[]" value="{{ exp.role }}" placeholder="Software Engineer" /></label>
+                                <label>Duration<input name="experience_period[]" value="{{ exp.period }}" placeholder="Jan 2023 - Present" /></label>
+                                <label>Responsibilities<textarea name="experience_responsibilities[]" rows="4" placeholder="Developed and maintained REST APIs using Django REST Framework&#10;Implemented CI/CD pipelines using GitHub Actions&#10;Collaborated with cross-functional teams to deliver features on time">{{ exp.responsibilities }}</textarea></label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-actions" style="margin-top:12px;">
+                        <button type="button" class="btn btn-secondary" onclick="addExperienceRow()">Add Experience</button>
+                    </div>
+                </div>
+
+            {% elif step == 6 %}
                 <div>
                     <h3 style="margin-top:0;">Education (add multiple)</h3>
                     <div id="education-rows">
-                        
-                        <div class="edu-row form-grid">
-                            <label>Degree<input name="education_degree[]" placeholder="B.Sc in Computer Science and Engineering" /></label>
-                            <label>Institution<input name="education_institution[]" placeholder="National University, Bangladesh" /></label>
-                            <label>Passing Year<input name="education_passing_year[]" placeholder="2023" /></label>
-                            <label>GPA/CGPA (e.g., 3.14)<input name="education_gpa_cgpa[]" placeholder="3.14" /></label>
-                            <label>GPA/CGPA Max (e.g., 4.00)<input name="education_gpa_max[]" placeholder="4.00" /></label>
-                            <label>Details<input name="education_details[]" placeholder="" /></label>
+                        {% for edu in data.education %}
+                        <div class="edu-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                            <div class="form-grid">
+                                <label>Degree<input name="education_degree[]" value="{{ edu.degree }}" placeholder="B.Sc in Computer Science and Engineering" /></label>
+                                <label>Institution<input name="education_institution[]" value="{{ edu.institution }}" placeholder="National University, Bangladesh" /></label>
+                                <label>Period<input name="education_period[]" value="{{ edu.period }}" placeholder="2020 - 2024" /></label>
+                                <label>GPA/CGPA<input name="education_gpa_cgpa[]" value="{{ edu.gpa_cgpa }}" placeholder="3.75" /></label>
+                                <label>Max GPA<input name="education_gpa_max[]" value="{{ edu.gpa_max }}" placeholder="4.00" /></label>
+                                <label>Details<textarea name="education_details[]" rows="2" placeholder="Relevant coursework: Data Structures, Algorithms, Machine Learning, Database Systems">{{ edu.details }}</textarea></label>
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
                     <div class="form-actions" style="margin-top:12px;">
                         <button type="button" class="btn btn-secondary" onclick="addEducationRow()">Add Education</button>
                     </div>
                 </div>
+
             {% else %}
                 <div class="preview-summary">
                     <h3>Ready to preview</h3>
                     <p>Your CV will be generated from the information you entered. Review it and download it as PDF or DOCX.</p>
                 </div>
             {% endif %}
+
             <div class="form-actions">
                 {% if step > 1 %}
                     <a href="/create/?step={{ step|add:'-1' }}" class="btn btn-secondary">Back</a>
+                {% else %}
+                    <div></div>
                 {% endif %}
-                <button type="submit" class="btn">{% if step < 5 %}Save & Next{% else %}Generate Preview{% endif %}</button>
+                <button type="submit" class="btn">{% if step < 7 %}Save & Next{% else %}Generate Preview{% endif %}</button>
             </div>
         </form>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addSkillCategoryRow() {
+    const container = document.getElementById('skill-category-rows');
+    const template = container.children[0].cloneNode(true);
+    template.querySelectorAll('input, textarea, select').forEach(i => {
+        if (i.tagName === 'SELECT') {
+            i.selectedIndex = 0;
+        } else {
+            i.value = '';
+        }
+    });
+    container.appendChild(template);
+}
+
+function addProjectRow() {
+    const container = document.getElementById('project-rows');
+    const template = container.children[0].cloneNode(true);
+    template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+    template.querySelector('select').selectedIndex = 0;
+    container.appendChild(template);
+}
+
+function addExperienceRow() {
+    const container = document.getElementById('experience-rows');
+    const template = container.children[0].cloneNode(true);
+    template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+    container.appendChild(template);
+}
+
+function addEducationRow() {
+    const container = document.getElementById('education-rows');
+    const template = container.children[0].cloneNode(true);
+    template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+    container.appendChild(template);
+}
+</script>
 {% endblock %}
