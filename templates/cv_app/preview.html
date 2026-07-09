@@ -1,0 +1,143 @@
+{% extends 'cv_app/base.html' %}
+{% load cv_tags %}
+
+{% block title %}CV Preview{% endblock %}
+
+{% block content %}
+<section class="preview-page">
+    <div class="preview-toolbar">
+        <a href="/create/" class="btn btn-secondary">Back to Edit</a>
+        <div class="toolbar-actions">
+            <a href="/download/pdf/" class="btn">Download PDF</a>
+            <a href="/download/docx/" class="btn btn-secondary">Download DOCX</a>
+        </div>
+    </div>
+
+    <div class="preview-grid">
+        <div class="preview-card cv-preview">
+            <div class="cv-header">
+                <h1>{{ data.personal.full_name|default:'Your Name' }}</h1>
+                <p>{{ data.personal.location|default:'Location' }}</p>
+                <div class="contact-row">
+                    <span>{{ data.personal.email|default:'email@example.com' }}</span>
+                    <span>{{ data.personal.phone|default:'Phone' }}</span>
+                    {% if data.personal.linkedin %}
+                    <span><a href="{{ data.personal.linkedin }}" target="_blank">LinkedIn</a></span>
+                    {% endif %}
+                    {% if data.personal.github %}
+                    <span><a href="{{ data.personal.github }}" target="_blank">GitHub</a></span>
+                    {% endif %}
+                    {% if data.personal.portfolio %}
+                    <span><a href="{{ data.personal.portfolio }}" target="_blank">Portfolio</a></span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="cv-section">
+                <h2>PROFESSIONAL SUMMARY</h2>
+                <p>{{ generated_summary|default:"Targeted professional aligned to the target role with ATS-friendly content." }}</p>
+            </div>
+
+            <div class="cv-section">
+                <h2>PROFESSIONAL SKILLS</h2>
+                {% if data.skill_categories %}
+                    {% for cat in data.skill_categories %}
+                        <p><b>- {{ cat.category }}:</b> {{ cat.items }}</p>
+                    {% endfor %}
+                {% else %}
+                    <p>- Communication: Communication, Problem Solving</p>
+                {% endif %}
+            </div>
+
+            <div class="cv-section">
+                <h2>PROJECTS</h2>
+                {% if data.projects %}
+                    {% for project in data.projects %}
+                        {% if project.title or project.description %}
+                            <h3>
+                                {{ project.title }}
+                                {% if project.source_code_link %}
+                                    <span style="font-weight:600; margin-left: 8px;">[Source Code]</span>
+                                {% endif %}
+                            </h3>
+                            {% if project.description %}
+                                <ul>
+                                    {% for line in project.description.splitlines %}
+                                        {% if line|trim %}<li>{{ line|trim }}</li>{% endif %}
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            {% if project.source_code_link %}
+                                <p><small>[Source Code] {{ project.source_code_link }}</small></p>
+                            {% endif %}
+                            {% if project.project_link %}
+                                <p><small>Project Link: {{ project.project_link }}</small></p>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p>No project details entered.</p>
+                {% endif %}
+            </div>
+
+            <div class="cv-section">
+                <h2>EDUCATION</h2>
+                {% if data.education %}
+                    {% for edu in data.education %}
+                        {% if edu.degree or edu.institution %}
+                            <p><b>{{ edu.degree }}</b> | {{ edu.institution }} | <b>Graduated</b>: {{ edu.period }}</p>
+                            {% if edu.gpa_cgpa or edu.gpa_max %}
+                                <p><b>CGPA/GPA</b>: {{ edu.gpa_cgpa }}{% if edu.gpa_max %} / {{ edu.gpa_max }}{% endif %}</p>
+                            {% endif %}
+                            {% if edu.details %}<p>{{ edu.details }}</p>{% endif %}
+                            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 8px 0;" />
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <p>No education details entered.</p>
+                {% endif %}
+            </div>
+
+            {% if data.experience %}
+            <div class="cv-section">
+                <h2>EXPERIENCE</h2>
+                {% for exp in data.experience %}
+                    {% if exp.company or exp.role %}
+                        <h3>{{ exp.role }} @ {{ exp.company }}</h3>
+                        {% if exp.period %}<p>{{ exp.period }}</p>{% endif %}
+                        {% if exp.responsibilities %}
+                            <ul>
+                                {% for item in exp.responsibilities.splitlines %}
+                                    {% if item|trim %}<li>{{ item|trim }}</li>{% endif %}
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <aside class="preview-card score-card">
+            <h2>ATS Score Card</h2>
+            <div class="score-pill">{{ score }}%</div>
+            <ul>
+                <li><strong>Keywords:</strong> {{ keyword_count }}/{{ keyword_total }}</li>
+                <li><strong>Format:</strong> ATS-safe structure</li>
+                <li><strong>Sections:</strong> Complete and scannable</li>
+                <li><strong>Action verbs:</strong> Included</li>
+            </ul>
+            <div class="suggestions">
+                <h3>Keyword suggestions</h3>
+                <ul>
+                    {% for suggestion in keyword_suggestions %}
+                    <li>{{ suggestion }}</li>
+                    {% empty %}
+                    <li>Add role-specific skills from the job description.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+    </div>
+</section>
+{% endblock %}
