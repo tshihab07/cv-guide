@@ -84,3 +84,126 @@ class FAQItem(models.Model):
 
     def __str__(self):
         return self.question
+
+
+class SkillCategory(models.Model):
+    CATEGORY_CHOICES = [
+        ('Programming Languages', 'Programming Languages'),
+        ('Machine Learning & AI', 'Machine Learning & AI'),
+        ('Data Analysis & Visualization', 'Data Analysis & Visualization'),
+        ('Databases', 'Databases'),
+        ('Backend Development', 'Backend Development'),
+        ('Frontend Development', 'Frontend Development'),
+        ('Cloud & DevOps', 'Cloud & DevOps'),
+        ('Web Scraping & Automation', 'Web Scraping & Automation'),
+        ('Testing & QA', 'Testing & QA'),
+        ('Project Management & Soft Skills', 'Project Management & Soft Skills'),
+    ]
+    category = models.CharField(max_length=100, choices=CATEGORY_CHOICES)
+    items = models.TextField(help_text="Comma-separated skills")
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name_plural = 'Skill Categories'
+
+    def __str__(self):
+        return self.category
+
+
+class Project(models.Model):
+    CATEGORY_CHOICES = [
+        ('Machine Learning', 'Machine Learning'),
+        ('Python', 'Python'),
+        ('Django', 'Django'),
+        ('Flask', 'Flask'),
+        ('FastAPI', 'FastAPI'),
+        ('ReactJS', 'ReactJS'),
+        ('AngularJS', 'AngularJS'),
+        ('VueJS', 'VueJS'),
+        ('Event Management', 'Event Management'),
+        ('Data Analysis', 'Data Analysis'),
+        ('Web Scraping', 'Web Scraping'),
+        ('Automation', 'Automation'),
+        ('Backend Development', 'Backend Development'),
+        ('Frontend Development', 'Frontend Development'),
+        ('Full Stack', 'Full Stack'),
+        ('Mobile Development', 'Mobile Development'),
+        ('DevOps', 'DevOps'),
+        ('Cloud Computing', 'Cloud Computing'),
+        ('Cybersecurity', 'Cybersecurity'),
+        ('Blockchain', 'Blockchain'),
+        ('IoT', 'IoT'),
+        ('Game Development', 'Game Development'),
+        ('Desktop Application', 'Desktop Application'),
+        ('Research', 'Research'),
+        ('Academic Project', 'Academic Project'),
+        ('Other', 'Other'),
+    ]
+    title = models.CharField(max_length=200)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    description = models.TextField(help_text="Use bullet points (one per line)")
+    source_code_link = models.URLField(blank=True, null=True)
+    project_link = models.URLField(blank=True, null=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return self.title
+
+
+class Education(models.Model):
+    degree = models.CharField(max_length=200)
+    institution = models.CharField(max_length=200)
+    period = models.CharField(max_length=100, help_text="e.g., 2020 - 2024")
+    gpa_cgpa = models.CharField(max_length=20, blank=True, null=True)
+    gpa_max = models.CharField(max_length=20, blank=True, null=True)
+    details = models.TextField(blank=True, null=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name_plural = 'Education'
+
+    def __str__(self):
+        return f"{self.degree} - {self.institution}"
+
+
+class Experience(models.Model):
+    company = models.CharField(max_length=200)
+    role = models.CharField(max_length=200)
+    period = models.CharField(max_length=100, blank=True, null=True)
+    responsibilities = models.TextField(help_text="One responsibility per line")
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+
+    def __str__(self):
+        return f"{self.role} @ {self.company}"
+
+
+class PersonalInfo(models.Model):
+    full_name = models.CharField(max_length=200)
+    email = models.EmailField()
+    phone = models.CharField(max_length=50)
+    location = models.CharField(max_length=200)
+    linkedin = models.URLField(blank=True, null=True)
+    github = models.URLField(blank=True, null=True)
+    portfolio = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return self.full_name
+
+
+class JobRequirements(models.Model):
+    job_title = models.CharField(max_length=200)
+    role = models.CharField(max_length=200, blank=True, null=True)
+    job_description = models.TextField()
+    keywords = models.TextField(blank=True, null=True, help_text="Comma-separated keywords")
+    required_skills = models.TextField(blank=True, null=True, help_text="Comma-separated required skills")
+
+    def __str__(self):
+        return self.job_title
