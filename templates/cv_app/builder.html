@@ -15,7 +15,9 @@
             <li class="{% if step == 4 %}active{% endif %}">Projects</li>
             <li class="{% if step == 5 %}active{% endif %}">Experience</li>
             <li class="{% if step == 6 %}active{% endif %}">Education</li>
-            <li class="{% if step == 7 %}active{% endif %}">Preview</li>
+            <li class="{% if step == 7 %}active{% endif %}">Certifications</li>
+            <li class="{% if step == 8 %}active{% endif %}">Honors & Awards</li>
+            <li class="{% if step == 9 %}active{% endif %}">Preview</li>
         </ol>
         <div class="mini-card">
             <p>Everything stays in your current session and is not stored long term.</p>
@@ -23,7 +25,7 @@
     </div>
 
     <div class="builder-form">
-        <h1>Step {{ step }} of 7</h1>
+        <h1>Step {{ step }} of 9</h1>
         {% if messages %}
             {% for message in messages %}
                 <div class="alert">{{ message }}</div>
@@ -51,9 +53,10 @@
                     <label>Job Description<textarea name="job_description" rows="6">{{ data.job_requirements.job_description|default:'' }}</textarea></label>
                     <label>Keywords (comma separated)<input name="keywords" value="{{ data.job_requirements.keywords|default:'' }}" /></label>
                     <label>Required Skills (comma separated)<input name="required_skills" value="{{ data.job_requirements.required_skills|default:'' }}" /></label>
+                    <label>Professional Summary (optional)<textarea name="custom_summary" rows="4" placeholder="Add your existing professional summary or paste the job nature/description here. This will be used to generate your CV summary. If left blank, a summary will be auto-generated from the job description and skills.">{{ data.job_requirements.custom_summary|default:'' }}</textarea></label>
                 </div>
                 <div class="mini-card" style="margin-top: 16px;">
-                    <p><strong>Tip:</strong> Paste the job description and requirements. Skills will be auto-extracted and categorized in the next step.</p>
+                    <p><strong>Tip:</strong> Paste the job description and requirements. Skills will be auto-extracted and categorized in the next step. You can also provide your own professional summary in the optional field above.</p>
                 </div>
 
             {% elif step == 3 %}
@@ -65,7 +68,7 @@
                         {% for cat in data.skill_categories %}
                         <div class="skill-category-row form-grid" style="margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
                             <label>Category
-                                <select name="skill_category[]" class="form-control">
+                                <select name="skill_category[]" class="form-control skill-category-select">
                                     {% for default_cat in default_skill_categories %}
                                         <option value="{{ default_cat }}" {% if default_cat == cat.category %}selected{% endif %}>{{ default_cat }}</option>
                                     {% endfor %}
@@ -73,6 +76,9 @@
                                 </select>
                             </label>
                             <label>Skills (comma separated)<textarea name="skill_items[]" rows="2">{{ cat.items }}</textarea></label>
+                            <label style="display: {% if cat.category == 'Other' or cat.category not in default_skill_categories %}flex{% else %}none{% endif %};">
+                                Custom Category<input name="skill_custom_category[]" type="text" value="{{ cat.category|default:'' }}" placeholder="Enter custom category name" />
+                            </label>
                         </div>
                         {% endfor %}
                     </div>
@@ -173,7 +179,49 @@
                     </div>
                 </div>
 
-            {% else %}
+            {% elif step == 7 %}
+                <div>
+                    <h3 style="margin-top:0;">Certifications (add multiple)</h3>
+                    <div id="certification-rows">
+                        {% for cert in data.certifications %}
+                        <div class="certification-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                            <div class="form-grid">
+                                <label>Certification Name<input name="certification_name[]" value="{{ cert.name }}" placeholder="AWS Certified Solutions Architect" /></label>
+                                <label>Issuing Organization<input name="certification_issuer[]" value="{{ cert.issuer }}" placeholder="Amazon Web Services" /></label>
+                                <label>Date Obtained<input name="certification_date[]" value="{{ cert.date }}" placeholder="Jan 2024" /></label>
+                                <label>Expiration Date<input name="certification_expiration[]" value="{{ cert.expiration }}" placeholder="Jan 2027 or Does not expire" /></label>
+                                <label>Credential ID<input name="certification_credential_id[]" value="{{ cert.credential_id }}" placeholder="ABC123XYZ (optional)" /></label>
+                                <label>Credential URL<input name="certification_credential_url[]" value="{{ cert.credential_url }}" placeholder="https://www.credly.com/badges/... (optional)" /></label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-actions" style="margin-top:12px;">
+                        <button type="button" class="btn btn-secondary" onclick="addCertificationRow()">Add Certification</button>
+                    </div>
+                </div>
+
+            {% elif step == 8 %}
+                <div>
+                    <h3 style="margin-top:0;">Honors & Awards (add multiple)</h3>
+                    <div id="honor-rows">
+                        {% for honor in data.honors_awards %}
+                        <div class="honor-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                            <div class="form-grid">
+                                <label>Title<input name="honor_title[]" value="{{ honor.title }}" placeholder="Dean's List Award" /></label>
+                                <label>Issuer<input name="honor_issuer[]" value="{{ honor.issuer }}" placeholder="National University, Bangladesh" /></label>
+                                <label>Date Received<input name="honor_date[]" value="{{ honor.date }}" placeholder="June 2023" /></label>
+                                <label>Description<textarea name="honor_description[]" rows="2" placeholder="Awarded for academic excellence with CGPA 3.9/4.0">{{ honor.description }}</textarea></label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="form-actions" style="margin-top:12px;">
+                        <button type="button" class="btn btn-secondary" onclick="addHonorRow()">Add Honor/Award</button>
+                    </div>
+                </div>
+
+            {% elif step == 9 %}
                 <div class="preview-summary">
                     <h3>Ready to preview</h3>
                     <p>Your CV will be generated from the information you entered. Review it and download it as PDF or DOCX.</p>
@@ -195,38 +243,207 @@
 
 {% block extra_js %}
 <script>
+// Pass default skill categories from Django to JavaScript
+const defaultSkillCategories = {{ default_skill_categories|safe }};
+
 function addSkillCategoryRow() {
     const container = document.getElementById('skill-category-rows');
-    const template = container.children[0].cloneNode(true);
-    template.querySelectorAll('input, textarea, select').forEach(i => {
-        if (i.tagName === 'SELECT') {
-            i.selectedIndex = 0;
-        } else {
-            i.value = '';
-        }
-    });
+    let template;
+    if (container.children.length > 0) {
+        template = container.children[0].cloneNode(true);
+        template.querySelectorAll('input, textarea, select').forEach(i => {
+            if (i.tagName === 'SELECT') {
+                i.selectedIndex = 0;
+            } else {
+                i.value = '';
+            }
+        });
+    } else {
+        template = document.createElement('div');
+        template.className = 'skill-category-row form-grid';
+        template.style.cssText = 'margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);';
+        let optionsHtml = '';
+        defaultSkillCategories.forEach(cat => {
+            optionsHtml += `<option value="${cat}">${cat}</option>`;
+        });
+        optionsHtml += `<option value="Other">Other</option>`;
+        template.innerHTML = `
+            <label>Category
+                <select name="skill_category[]" class="form-control skill-category-select">
+                    ${optionsHtml}
+                </select>
+            </label>
+            <label>Skills (comma separated)<textarea name="skill_items[]" rows="2"></textarea></label>
+            <label style="display:none;" class="custom-category-wrapper">
+                Custom Category<input type="text" name="skill_custom_category[]" placeholder="Enter custom category" />
+            </label>
+        `;
+    }
     container.appendChild(template);
+    // Add event listener for "Other" option
+    template.querySelector('.skill-category-select').addEventListener('change', handleSkillCategoryChange);
 }
+
+function handleSkillCategoryChange(e) {
+    const wrapper = e.target.closest('.skill-category-row').querySelector('.custom-category-wrapper');
+    if (e.target.value === 'Other') {
+        wrapper.style.display = 'flex';
+        wrapper.querySelector('input').required = true;
+    } else {
+        wrapper.style.display = 'none';
+        wrapper.querySelector('input').required = false;
+    }
+}
+
+// Initialize event listeners for existing skill category selects
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.skill-category-select').forEach(select => {
+        select.addEventListener('change', handleSkillCategoryChange);
+    });
+});
 
 function addProjectRow() {
     const container = document.getElementById('project-rows');
-    const template = container.children[0].cloneNode(true);
-    template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
-    template.querySelector('select').selectedIndex = 0;
+    let template;
+    if (container.children.length > 0) {
+        template = container.children[0].cloneNode(true);
+        template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+        template.querySelector('select').selectedIndex = 0;
+    } else {
+        template = document.createElement('div');
+        template.className = 'project-row';
+        template.style.cssText = 'margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);';
+        template.innerHTML = `
+            <div class="form-grid">
+                <label>Project Title<input name="project_title[]" placeholder="Intelligent Loan Approval Prediction System" /></label>
+                <label>Project Category
+                    <select name="project_category[]">
+                        <option value="Machine Learning">Machine Learning</option>
+                        <option value="Python">Python</option>
+                        <option value="Django">Django</option>
+                        <option value="Flask">Flask</option>
+                        <option value="FastAPI">FastAPI</option>
+                        <option value="ReactJS">ReactJS</option>
+                        <option value="AngularJS">AngularJS</option>
+                        <option value="VueJS">VueJS</option>
+                        <option value="Event Management">Event Management</option>
+                        <option value="Data Analysis">Data Analysis</option>
+                        <option value="Web Scraping">Web Scraping</option>
+                        <option value="Automation">Automation</option>
+                        <option value="Backend Development">Backend Development</option>
+                        <option value="Frontend Development">Frontend Development</option>
+                        <option value="Full Stack">Full Stack</option>
+                        <option value="Mobile Development">Mobile Development</option>
+                        <option value="DevOps">DevOps</option>
+                        <option value="Cloud Computing">Cloud Computing</option>
+                        <option value="Cybersecurity">Cybersecurity</option>
+                        <option value="Blockchain">Blockchain</option>
+                        <option value="IoT">IoT</option>
+                        <option value="Game Development">Game Development</option>
+                        <option value="Desktop Application">Desktop Application</option>
+                        <option value="Research">Research</option>
+                        <option value="Academic Project">Academic Project</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </label>
+                <label>Project Description<textarea name="project_description[]" rows="4" placeholder="Performed EDA and feature engineering on financial datasets...&#10;Reduced predicted default risk by 86% using XGBoost with optuna optimization&#10;Ensure fair and consistent evaluation&#10;Cut manual screening time by 67% through automated ML pipeline"></textarea></label>
+                <label>Source Code Link (optional)<input name="source_code_link[]" placeholder="https://github.com/..." /></label>
+                <label>Project Link (optional)<input name="project_link[]" placeholder="https://your-deployed-url.com/" /></label>
+            </div>
+        `;
+    }
     container.appendChild(template);
 }
 
 function addExperienceRow() {
     const container = document.getElementById('experience-rows');
-    const template = container.children[0].cloneNode(true);
-    template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+    let template;
+    if (container.children.length > 0) {
+        template = container.children[0].cloneNode(true);
+        template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+    } else {
+        template = document.createElement('div');
+        template.className = 'experience-row';
+        template.style.cssText = 'margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);';
+        template.innerHTML = `
+            <div class="form-grid">
+                <label>Company<input name="experience_company[]" placeholder="ABC Technologies Ltd." /></label>
+                <label>Role<input name="experience_role[]" placeholder="Software Engineer" /></label>
+                <label>Duration<input name="experience_period[]" placeholder="Jan 2023 - Present" /></label>
+                <label>Responsibilities<textarea name="experience_responsibilities[]" rows="4" placeholder="Developed and maintained REST APIs using Django REST Framework&#10;Implemented CI/CD pipelines using GitHub Actions&#10;Collaborated with cross-functional teams to deliver features on time"></textarea></label>
+            </div>
+        `;
+    }
     container.appendChild(template);
 }
 
 function addEducationRow() {
     const container = document.getElementById('education-rows');
-    const template = container.children[0].cloneNode(true);
-    template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+    let template;
+    if (container.children.length > 0) {
+        template = container.children[0].cloneNode(true);
+        template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+    } else {
+        template = document.createElement('div');
+        template.className = 'edu-row';
+        template.style.cssText = 'margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);';
+        template.innerHTML = `
+            <div class="form-grid">
+                <label>Degree<input name="education_degree[]" placeholder="B.Sc in Computer Science and Engineering" /></label>
+                <label>Institution<input name="education_institution[]" placeholder="National University, Bangladesh" /></label>
+                <label>Period<input name="education_period[]" placeholder="2020 - 2024" /></label>
+                <label>GPA/CGPA<input name="education_gpa_cgpa[]" placeholder="3.75" /></label>
+                <label>Max GPA<input name="education_gpa_max[]" placeholder="4.00" /></label>
+                <label>Details<textarea name="education_details[]" rows="2" placeholder="Relevant coursework: Data Structures, Algorithms, Machine Learning, Database Systems"></textarea></label>
+            </div>
+        `;
+    }
+    container.appendChild(template);
+}
+
+function addCertificationRow() {
+    const container = document.getElementById('certification-rows');
+    let template;
+    if (container.children.length > 0) {
+        template = container.children[0].cloneNode(true);
+        template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+    } else {
+        template = document.createElement('div');
+        template.className = 'certification-row';
+        template.style.cssText = 'margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);';
+        template.innerHTML = `
+            <div class="form-grid">
+                <label>Certification Name<input name="certification_name[]" placeholder="AWS Certified Solutions Architect" /></label>
+                <label>Issuing Organization<input name="certification_issuer[]" placeholder="Amazon Web Services" /></label>
+                <label>Date Obtained<input name="certification_date[]" placeholder="Jan 2024" /></label>
+                <label>Expiration Date<input name="certification_expiration[]" placeholder="Jan 2027 or Does not expire" /></label>
+                <label>Credential ID<input name="certification_credential_id[]" placeholder="ABC123XYZ (optional)" /></label>
+                <label>Credential URL<input name="certification_credential_url[]" placeholder="https://www.credly.com/badges/... (optional)" /></label>
+            </div>
+        `;
+    }
+    container.appendChild(template);
+}
+
+function addHonorRow() {
+    const container = document.getElementById('honor-rows');
+    let template;
+    if (container.children.length > 0) {
+        template = container.children[0].cloneNode(true);
+        template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+    } else {
+        template = document.createElement('div');
+        template.className = 'honor-row';
+        template.style.cssText = 'margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);';
+        template.innerHTML = `
+            <div class="form-grid">
+                <label>Title<input name="honor_title[]" placeholder="Dean's List Award" /></label>
+                <label>Issuer<input name="honor_issuer[]" placeholder="National University, Bangladesh" /></label>
+                <label>Date Received<input name="honor_date[]" placeholder="June 2023" /></label>
+                <label>Description<textarea name="honor_description[]" rows="2" placeholder="Awarded for academic excellence with CGPA 3.9/4.0"></textarea></label>
+            </div>
+        `;
+    }
     container.appendChild(template);
 }
 </script>
