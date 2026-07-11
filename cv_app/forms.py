@@ -10,6 +10,22 @@ from .models import (
 )
 
 
+class CertificationForm(forms.Form):
+    name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'AWS Certified Solutions Architect'}))
+    issuer = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Amazon Web Services'}))
+    date_obtained = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Jan 2024'}))
+    expiration_date = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Jan 2027 (optional)'}))
+    credential_id = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ABC123XYZ (optional)'}))
+    credential_url = forms.URLField(required=False, widget=forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://www.credly.com/badges/... (optional)'}))
+
+
+class HonorAwardForm(forms.Form):
+    title = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Dean's List / Best Paper Award"}))
+    issuer = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'University Name / Conference Name'}))
+    date_received = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'May 2023'}))
+    description = forms.CharField(required=False, widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Brief description of the honor/award (optional)'}))
+
+
 class LandingPageContentForm(forms.ModelForm):
     class Meta:
         model = LandingPageContent
