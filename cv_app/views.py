@@ -1156,6 +1156,7 @@ def _get_builder_data(request):
 
 def _extract_skill_categories(job_description='', required_skills='', extra_skills='', keywords=''):
     text = ' '.join([job_description, required_skills, extra_skills, keywords]).lower()
+    # Keep only alphanumeric, +, ., /, - and spaces
     text = re.sub(r'[^a-z0-9+\s./-]', ' ', text)
     text = re.sub(r'\s+', ' ', text).strip()
 
@@ -1166,7 +1167,10 @@ def _extract_skill_categories(job_description='', required_skills='', extra_skil
         for raw_term, display_term in SKILL_KEYWORD_MAP.get(category, []):
             if not raw_term:
                 continue
-            if raw_term in text:
+            # Use word boundary regex for more accurate matching
+            # Escape special regex characters
+            pattern = r'\b' + re.escape(raw_term) + r'\b'
+            if re.search(pattern, text):
                 if display_term not in seen:
                     seen.add(display_term)
                     matches.append(display_term)
