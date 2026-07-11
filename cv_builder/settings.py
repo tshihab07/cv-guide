@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-mu%a2g2+sluv&k@3)6nmnncq-sg2ehr!j$t+(smt-@lln4c4cb')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda value: [item.strip() for item in value.split(',') if item.strip()])
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver', cast=lambda value: [item.strip() for item in value.split(',') if item.strip()])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
