@@ -65,22 +65,41 @@
                     <p class="mini-card">Skills are automatically extracted from the job requirements. You can add, remove, or modify categories and skills below.</p>
                     
                     <div id="skill-category-rows">
-                        {% for cat in data.skill_categories %}
-                        <div class="skill-category-row form-grid" style="margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
-                            <label>Category
-                                <select name="skill_category[]" class="form-control skill-category-select">
-                                    {% for default_cat in default_skill_categories %}
-                                        <option value="{{ default_cat }}" {% if default_cat == cat.category %}selected{% endif %}>{{ default_cat }}</option>
-                                    {% endfor %}
-                                    <option value="Other" {% if cat.category not in default_skill_categories %}selected{% endif %}>Other</option>
-                                </select>
-                            </label>
-                            <label>Skills (comma separated)<textarea name="skill_items[]" rows="2">{{ cat.items }}</textarea></label>
-                            <label style="display: {% if cat.category == 'Other' or cat.category not in default_skill_categories %}flex{% else %}none{% endif %};">
-                                Custom Category<input name="skill_custom_category[]" type="text" value="{{ cat.category|default:'' }}" placeholder="Enter custom category name" />
-                            </label>
-                        </div>
-                        {% endfor %}
+                        {% if data.skill_categories %}
+                            {% for cat in data.skill_categories %}
+                            <div class="skill-category-row form-grid" style="margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <label>Category
+                                    <select name="skill_category[]" class="form-control skill-category-select">
+                                        {% for default_cat in default_skill_categories %}
+                                            <option value="{{ default_cat }}" {% if default_cat == cat.category %}selected{% endif %}>{{ default_cat }}</option>
+                                        {% endfor %}
+                                        <option value="Other" {% if cat.category not in default_skill_categories %}selected{% endif %}>Other</option>
+                                    </select>
+                                </label>
+                                <label>Skills (comma separated)<textarea name="skill_items[]" rows="2">{{ cat.items }}</textarea></label>
+                                <label style="display: {% if cat.category == 'Other' or cat.category not in default_skill_categories %}flex{% else %}none{% endif %};">
+                                    Custom Category<input name="skill_custom_category[]" type="text" value="{{ cat.category|default:'' }}" placeholder="Enter custom category name" />
+                                </label>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="align-self: flex-start; height: fit-content; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="skill-category-row form-grid" style="margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <label>Category
+                                    <select name="skill_category[]" class="form-control skill-category-select">
+                                        {% for default_cat in default_skill_categories %}
+                                            <option value="{{ default_cat }}">{{ default_cat }}</option>
+                                        {% endfor %}
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </label>
+                                <label>Skills (comma separated)<textarea name="skill_items[]" rows="2"></textarea></label>
+                                <label style="display: none;">
+                                    Custom Category<input name="skill_custom_category[]" type="text" placeholder="Enter custom category name" />
+                                </label>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="align-self: flex-start; height: fit-content; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="form-actions" style="margin-top:12px;">
                         <button type="button" class="btn btn-secondary" onclick="addSkillCategoryRow()">Add Skill Category</button>
@@ -91,46 +110,89 @@
                 <div>
                     <h3 style="margin-top:0;">Projects (add multiple)</h3>
                     <div id="project-rows">
-                        {% for project in data.projects %}
-                        <div class="project-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
-                            <div class="form-grid">
-                                <label>Project Title<input name="project_title[]" value="{{ project.title }}" placeholder="Intelligent Loan Approval Prediction System" /></label>
-                                <label>Project Category
-                                    <select name="project_category[]">
-                                        <option value="Machine Learning" {% if project.category == "Machine Learning" %}selected{% endif %}>Machine Learning</option>
-                                        <option value="Python" {% if project.category == "Python" %}selected{% endif %}>Python</option>
-                                        <option value="Django" {% if project.category == "Django" %}selected{% endif %}>Django</option>
-                                        <option value="Flask" {% if project.category == "Flask" %}selected{% endif %}>Flask</option>
-                                        <option value="FastAPI" {% if project.category == "FastAPI" %}selected{% endif %}>FastAPI</option>
-                                        <option value="ReactJS" {% if project.category == "ReactJS" %}selected{% endif %}>ReactJS</option>
-                                        <option value="AngularJS" {% if project.category == "AngularJS" %}selected{% endif %}>AngularJS</option>
-                                        <option value="VueJS" {% if project.category == "VueJS" %}selected{% endif %}>VueJS</option>
-                                        <option value="Event Management" {% if project.category == "Event Management" %}selected{% endif %}>Event Management</option>
-                                        <option value="Data Analysis" {% if project.category == "Data Analysis" %}selected{% endif %}>Data Analysis</option>
-                                        <option value="Web Scraping" {% if project.category == "Web Scraping" %}selected{% endif %}>Web Scraping</option>
-                                        <option value="Automation" {% if project.category == "Automation" %}selected{% endif %}>Automation</option>
-                                        <option value="Backend Development" {% if project.category == "Backend Development" %}selected{% endif %}>Backend Development</option>
-                                        <option value="Frontend Development" {% if project.category == "Frontend Development" %}selected{% endif %}>Frontend Development</option>
-                                        <option value="Full Stack" {% if project.category == "Full Stack" %}selected{% endif %}>Full Stack</option>
-                                        <option value="Mobile Development" {% if project.category == "Mobile Development" %}selected{% endif %}>Mobile Development</option>
-                                        <option value="DevOps" {% if project.category == "DevOps" %}selected{% endif %}>DevOps</option>
-                                        <option value="Cloud Computing" {% if project.category == "Cloud Computing" %}selected{% endif %}>Cloud Computing</option>
-                                        <option value="Cybersecurity" {% if project.category == "Cybersecurity" %}selected{% endif %}>Cybersecurity</option>
-                                        <option value="Blockchain" {% if project.category == "Blockchain" %}selected{% endif %}>Blockchain</option>
-                                        <option value="IoT" {% if project.category == "IoT" %}selected{% endif %}>IoT</option>
-                                        <option value="Game Development" {% if project.category == "Game Development" %}selected{% endif %}>Game Development</option>
-                                        <option value="Desktop Application" {% if project.category == "Desktop Application" %}selected{% endif %}>Desktop Application</option>
-                                        <option value="Research" {% if project.category == "Research" %}selected{% endif %}>Research</option>
-                                        <option value="Academic Project" {% if project.category == "Academic Project" %}selected{% endif %}>Academic Project</option>
-                                        <option value="Other" {% if project.category == "Other" or project.category not in "Machine Learning Python Django Flask FastAPI ReactJS AngularJS VueJS Event Management Data Analysis Web Scraping Automation Backend Development Frontend Development Full Stack Mobile Development DevOps Cloud Computing Cybersecurity Blockchain IoT Game Development Desktop Application Research Academic Project Other" %}selected{% endif %}>Other</option>
-                                    </select>
-                                </label>
-                                <label>Project Description<textarea name="project_description[]" rows="4" placeholder="Performed EDA and feature engineering on financial datasets and by using advanced machine learning models(Decision Tree, GBM, etc), the system captures complex patterns&#10;Reduced predicted default risk by 86% using XGBoost with optuna optimization&#10;Ensure fair and consistent evaluation&#10;Cut manual screening time by 67% through automated ML pipeline">{{ project.description }}</textarea></label>
-                                <label>Source Code Link (optional)<input name="source_code_link[]" value="{{ project.source_code_link }}" placeholder="https://github.com/..." /></label>
-                                <label>Project Link (optional)<input name="project_link[]" value="{{ project.project_link }}" placeholder="https://your-deployed-url.com/" /></label>
+                        {% if data.projects %}
+                            {% for project in data.projects %}
+                            <div class="project-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Project Title<input name="project_title[]" value="{{ project.title }}" placeholder="Intelligent Loan Approval Prediction System" /></label>
+                                    <label>Project Category
+                                        <select name="project_category[]">
+                                            <option value="Machine Learning" {% if project.category == "Machine Learning" %}selected{% endif %}>Machine Learning</option>
+                                            <option value="Python" {% if project.category == "Python" %}selected{% endif %}>Python</option>
+                                            <option value="Django" {% if project.category == "Django" %}selected{% endif %}>Django</option>
+                                            <option value="Flask" {% if project.category == "Flask" %}selected{% endif %}>Flask</option>
+                                            <option value="FastAPI" {% if project.category == "FastAPI" %}selected{% endif %}>FastAPI</option>
+                                            <option value="ReactJS" {% if project.category == "ReactJS" %}selected{% endif %}>ReactJS</option>
+                                            <option value="AngularJS" {% if project.category == "AngularJS" %}selected{% endif %}>AngularJS</option>
+                                            <option value="VueJS" {% if project.category == "VueJS" %}selected{% endif %}>VueJS</option>
+                                            <option value="Event Management" {% if project.category == "Event Management" %}selected{% endif %}>Event Management</option>
+                                            <option value="Data Analysis" {% if project.category == "Data Analysis" %}selected{% endif %}>Data Analysis</option>
+                                            <option value="Web Scraping" {% if project.category == "Web Scraping" %}selected{% endif %}>Web Scraping</option>
+                                            <option value="Automation" {% if project.category == "Automation" %}selected{% endif %}>Automation</option>
+                                            <option value="Backend Development" {% if project.category == "Backend Development" %}selected{% endif %}>Backend Development</option>
+                                            <option value="Frontend Development" {% if project.category == "Frontend Development" %}selected{% endif %}>Frontend Development</option>
+                                            <option value="Full Stack" {% if project.category == "Full Stack" %}selected{% endif %}>Full Stack</option>
+                                            <option value="Mobile Development" {% if project.category == "Mobile Development" %}selected{% endif %}>Mobile Development</option>
+                                            <option value="DevOps" {% if project.category == "DevOps" %}selected{% endif %}>DevOps</option>
+                                            <option value="Cloud Computing" {% if project.category == "Cloud Computing" %}selected{% endif %}>Cloud Computing</option>
+                                            <option value="Cybersecurity" {% if project.category == "Cybersecurity" %}selected{% endif %}>Cybersecurity</option>
+                                            <option value="Blockchain" {% if project.category == "Blockchain" %}selected{% endif %}>Blockchain</option>
+                                            <option value="IoT" {% if project.category == "IoT" %}selected{% endif %}>IoT</option>
+                                            <option value="Game Development" {% if project.category == "Game Development" %}selected{% endif %}>Game Development</option>
+                                            <option value="Desktop Application" {% if project.category == "Desktop Application" %}selected{% endif %}>Desktop Application</option>
+                                            <option value="Research" {% if project.category == "Research" %}selected{% endif %}>Research</option>
+                                            <option value="Academic Project" {% if project.category == "Academic Project" %}selected{% endif %}>Academic Project</option>
+                                            <option value="Other" {% if project.category == "Other" or project.category not in "Machine Learning Python Django Flask FastAPI ReactJS AngularJS VueJS Event Management Data Analysis Web Scraping Automation Backend Development Frontend Development Full Stack Mobile Development DevOps Cloud Computing Cybersecurity Blockchain IoT Game Development Desktop Application Research Academic Project Other" %}selected{% endif %}>Other</option>
+                                        </select>
+                                    </label>
+                                    <label>Project Description<textarea name="project_description[]" rows="4" placeholder="Performed EDA and feature engineering on financial datasets and by using advanced machine learning models(Decision Tree, GBM, etc), the system captures complex patterns&#10;Reduced predicted default risk by 86% using XGBoost with optuna optimization&#10;Ensure fair and consistent evaluation&#10;Cut manual screening time by 67% through automated ML pipeline">{{ project.description }}</textarea></label>
+                                    <label>Source Code Link (optional)<input name="source_code_link[]" value="{{ project.source_code_link }}" placeholder="https://github.com/..." /></label>
+                                    <label>Project Link (optional)<input name="project_link[]" value="{{ project.project_link }}" placeholder="https://your-deployed-url.com/" /></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
                             </div>
-                        </div>
-                        {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="project-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Project Title<input name="project_title[]" placeholder="Intelligent Loan Approval Prediction System" /></label>
+                                    <label>Project Category
+                                        <select name="project_category[]">
+                                            <option value="Machine Learning">Machine Learning</option>
+                                            <option value="Python">Python</option>
+                                            <option value="Django">Django</option>
+                                            <option value="Flask">Flask</option>
+                                            <option value="FastAPI">FastAPI</option>
+                                            <option value="ReactJS">ReactJS</option>
+                                            <option value="AngularJS">AngularJS</option>
+                                            <option value="VueJS">VueJS</option>
+                                            <option value="Event Management">Event Management</option>
+                                            <option value="Data Analysis">Data Analysis</option>
+                                            <option value="Web Scraping">Web Scraping</option>
+                                            <option value="Automation">Automation</option>
+                                            <option value="Backend Development">Backend Development</option>
+                                            <option value="Frontend Development">Frontend Development</option>
+                                            <option value="Full Stack">Full Stack</option>
+                                            <option value="Mobile Development">Mobile Development</option>
+                                            <option value="DevOps">DevOps</option>
+                                            <option value="Cloud Computing">Cloud Computing</option>
+                                            <option value="Cybersecurity">Cybersecurity</option>
+                                            <option value="Blockchain">Blockchain</option>
+                                            <option value="IoT">IoT</option>
+                                            <option value="Game Development">Game Development</option>
+                                            <option value="Desktop Application">Desktop Application</option>
+                                            <option value="Research">Research</option>
+                                            <option value="Academic Project">Academic Project</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </label>
+                                    <label>Project Description<textarea name="project_description[]" rows="4" placeholder="Performed EDA and feature engineering on financial datasets and by using advanced machine learning models(Decision Tree, GBM, etc), the system captures complex patterns&#10;Reduced predicted default risk by 86% using XGBoost with optuna optimization&#10;Ensure fair and consistent evaluation&#10;Cut manual screening time by 67% through automated ML pipeline"></textarea></label>
+                                    <label>Source Code Link (optional)<input name="source_code_link[]" placeholder="https://github.com/..." /></label>
+                                    <label>Project Link (optional)<input name="project_link[]" placeholder="https://your-deployed-url.com/" /></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="form-actions" style="margin-top:12px;">
                         <button type="button" class="btn btn-secondary" onclick="addProjectRow()">Add Project</button>
@@ -141,16 +203,29 @@
                 <div>
                     <h3 style="margin-top:0;">Experience (add multiple)</h3>
                     <div id="experience-rows">
-                        {% for exp in data.experience %}
-                        <div class="experience-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
-                            <div class="form-grid">
-                                <label>Company<input name="experience_company[]" value="{{ exp.company }}" placeholder="ABC Technologies Ltd." /></label>
-                                <label>Role<input name="experience_role[]" value="{{ exp.role }}" placeholder="Software Engineer" /></label>
-                                <label>Duration<input name="experience_period[]" value="{{ exp.period }}" placeholder="Jan 2023 - Present" /></label>
-                                <label>Responsibilities<textarea name="experience_responsibilities[]" rows="4" placeholder="Developed and maintained REST APIs using Django REST Framework&#10;Implemented CI/CD pipelines using GitHub Actions&#10;Collaborated with cross-functional teams to deliver features on time">{{ exp.responsibilities }}</textarea></label>
+                        {% if data.experience %}
+                            {% for exp in data.experience %}
+                            <div class="experience-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Company<input name="experience_company[]" value="{{ exp.company }}" placeholder="ABC Technologies Ltd." /></label>
+                                    <label>Role<input name="experience_role[]" value="{{ exp.role }}" placeholder="Software Engineer" /></label>
+                                    <label>Duration<input name="experience_period[]" value="{{ exp.period }}" placeholder="Jan 2023 - Present" /></label>
+                                    <label>Responsibilities<textarea name="experience_responsibilities[]" rows="4" placeholder="Developed and maintained REST APIs using Django REST Framework&#10;Implemented CI/CD pipelines using GitHub Actions&#10;Collaborated with cross-functional teams to deliver features on time">{{ exp.responsibilities }}</textarea></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
                             </div>
-                        </div>
-                        {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="experience-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Company<input name="experience_company[]" placeholder="ABC Technologies Ltd." /></label>
+                                    <label>Role<input name="experience_role[]" placeholder="Software Engineer" /></label>
+                                    <label>Duration<input name="experience_period[]" placeholder="Jan 2023 - Present" /></label>
+                                    <label>Responsibilities<textarea name="experience_responsibilities[]" rows="4" placeholder="Developed and maintained REST APIs using Django REST Framework&#10;Implemented CI/CD pipelines using GitHub Actions&#10;Collaborated with cross-functional teams to deliver features on time"></textarea></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="form-actions" style="margin-top:12px;">
                         <button type="button" class="btn btn-secondary" onclick="addExperienceRow()">Add Experience</button>
@@ -161,18 +236,33 @@
                 <div>
                     <h3 style="margin-top:0;">Education (add multiple)</h3>
                     <div id="education-rows">
-                        {% for edu in data.education %}
-                        <div class="edu-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
-                            <div class="form-grid">
-                                <label>Degree<input name="education_degree[]" value="{{ edu.degree }}" placeholder="B.Sc in Computer Science and Engineering" /></label>
-                                <label>Institution<input name="education_institution[]" value="{{ edu.institution }}" placeholder="National University, Bangladesh" /></label>
-                                <label>Period<input name="education_period[]" value="{{ edu.period }}" placeholder="2020 - 2024" /></label>
-                                <label>GPA/CGPA<input name="education_gpa_cgpa[]" value="{{ edu.gpa_cgpa }}" placeholder="3.75" /></label>
-                                <label>Max GPA<input name="education_gpa_max[]" value="{{ edu.gpa_max }}" placeholder="4.00" /></label>
-                                <label>Details<textarea name="education_details[]" rows="2" placeholder="Relevant coursework: Data Structures, Algorithms, Machine Learning, Database Systems">{{ edu.details }}</textarea></label>
+                        {% if data.education %}
+                            {% for edu in data.education %}
+                            <div class="edu-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Degree<input name="education_degree[]" value="{{ edu.degree }}" placeholder="B.Sc in Computer Science and Engineering" /></label>
+                                    <label>Institution<input name="education_institution[]" value="{{ edu.institution }}" placeholder="National University, Bangladesh" /></label>
+                                    <label>Period<input name="education_period[]" value="{{ edu.period }}" placeholder="2020 - 2024" /></label>
+                                    <label>GPA/CGPA<input name="education_gpa_cgpa[]" value="{{ edu.gpa_cgpa }}" placeholder="3.75" /></label>
+                                    <label>Max GPA<input name="education_gpa_max[]" value="{{ edu.gpa_max }}" placeholder="4.00" /></label>
+                                    <label>Details<textarea name="education_details[]" rows="2" placeholder="Relevant coursework: Data Structures, Algorithms, Machine Learning, Database Systems">{{ edu.details }}</textarea></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
                             </div>
-                        </div>
-                        {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="edu-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Degree<input name="education_degree[]" placeholder="B.Sc in Computer Science and Engineering" /></label>
+                                    <label>Institution<input name="education_institution[]" placeholder="National University, Bangladesh" /></label>
+                                    <label>Period<input name="education_period[]" placeholder="2020 - 2024" /></label>
+                                    <label>GPA/CGPA<input name="education_gpa_cgpa[]" placeholder="3.75" /></label>
+                                    <label>Max GPA<input name="education_gpa_max[]" placeholder="4.00" /></label>
+                                    <label>Details<textarea name="education_details[]" rows="2" placeholder="Relevant coursework: Data Structures, Algorithms, Machine Learning, Database Systems"></textarea></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="form-actions" style="margin-top:12px;">
                         <button type="button" class="btn btn-secondary" onclick="addEducationRow()">Add Education</button>
@@ -183,18 +273,33 @@
                 <div>
                     <h3 style="margin-top:0;">Certifications (add multiple)</h3>
                     <div id="certification-rows">
-                        {% for cert in data.certifications %}
-                        <div class="certification-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
-                            <div class="form-grid">
-                                <label>Certification Name<input name="certification_name[]" value="{{ cert.name }}" placeholder="AWS Certified Solutions Architect" /></label>
-                                <label>Issuing Organization<input name="certification_issuer[]" value="{{ cert.issuer }}" placeholder="Amazon Web Services" /></label>
-                                <label>Date Obtained<input name="certification_date[]" value="{{ cert.date }}" placeholder="Jan 2024" /></label>
-                                <label>Expiration Date<input name="certification_expiration[]" value="{{ cert.expiration }}" placeholder="Jan 2027 or Does not expire" /></label>
-                                <label>Credential ID<input name="certification_credential_id[]" value="{{ cert.credential_id }}" placeholder="ABC123XYZ (optional)" /></label>
-                                <label>Credential URL<input name="certification_credential_url[]" value="{{ cert.credential_url }}" placeholder="https://www.credly.com/badges/... (optional)" /></label>
+                        {% if data.certifications %}
+                            {% for cert in data.certifications %}
+                            <div class="certification-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Certification Name<input name="certification_name[]" value="{{ cert.name }}" placeholder="AWS Certified Solutions Architect" /></label>
+                                    <label>Issuing Organization<input name="certification_issuer[]" value="{{ cert.issuer }}" placeholder="Amazon Web Services" /></label>
+                                    <label>Date Obtained<input name="certification_date[]" value="{{ cert.date }}" placeholder="Jan 2024" /></label>
+                                    <label>Expiration Date<input name="certification_expiration[]" value="{{ cert.expiration }}" placeholder="Jan 2027 or Does not expire" /></label>
+                                    <label>Credential ID<input name="certification_credential_id[]" value="{{ cert.credential_id }}" placeholder="ABC123XYZ (optional)" /></label>
+                                    <label>Credential URL<input name="certification_credential_url[]" value="{{ cert.credential_url }}" placeholder="https://www.credly.com/badges/... (optional)" /></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
                             </div>
-                        </div>
-                        {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="certification-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Certification Name<input name="certification_name[]" placeholder="AWS Certified Solutions Architect" /></label>
+                                    <label>Issuing Organization<input name="certification_issuer[]" placeholder="Amazon Web Services" /></label>
+                                    <label>Date Obtained<input name="certification_date[]" placeholder="Jan 2024" /></label>
+                                    <label>Expiration Date<input name="certification_expiration[]" placeholder="Jan 2027 or Does not expire" /></label>
+                                    <label>Credential ID<input name="certification_credential_id[]" placeholder="ABC123XYZ (optional)" /></label>
+                                    <label>Credential URL<input name="certification_credential_url[]" placeholder="https://www.credly.com/badges/... (optional)" /></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="form-actions" style="margin-top:12px;">
                         <button type="button" class="btn btn-secondary" onclick="addCertificationRow()">Add Certification</button>
@@ -205,16 +310,29 @@
                 <div>
                     <h3 style="margin-top:0;">Honors & Awards (add multiple)</h3>
                     <div id="honor-rows">
-                        {% for honor in data.honors_awards %}
-                        <div class="honor-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
-                            <div class="form-grid">
-                                <label>Title<input name="honor_title[]" value="{{ honor.title }}" placeholder="Dean's List Award" /></label>
-                                <label>Issuer<input name="honor_issuer[]" value="{{ honor.issuer }}" placeholder="National University, Bangladesh" /></label>
-                                <label>Date Received<input name="honor_date[]" value="{{ honor.date }}" placeholder="June 2023" /></label>
-                                <label>Description<textarea name="honor_description[]" rows="2" placeholder="Awarded for academic excellence with CGPA 3.9/4.0">{{ honor.description }}</textarea></label>
+                        {% if data.honors_awards %}
+                            {% for honor in data.honors_awards %}
+                            <div class="honor-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Title<input name="honor_title[]" value="{{ honor.title }}" placeholder="Dean's List Award" /></label>
+                                    <label>Issuer<input name="honor_issuer[]" value="{{ honor.issuer }}" placeholder="National University, Bangladesh" /></label>
+                                    <label>Date Received<input name="honor_date[]" value="{{ honor.date }}" placeholder="June 2023" /></label>
+                                    <label>Description<textarea name="honor_description[]" rows="2" placeholder="Awarded for academic excellence with CGPA 3.9/4.0">{{ honor.description }}</textarea></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
                             </div>
-                        </div>
-                        {% endfor %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="honor-row" style="margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+                                <div class="form-grid">
+                                    <label>Title<input name="honor_title[]" placeholder="Dean's List Award" /></label>
+                                    <label>Issuer<input name="honor_issuer[]" placeholder="National University, Bangladesh" /></label>
+                                    <label>Date Received<input name="honor_date[]" placeholder="June 2023" /></label>
+                                    <label>Description<textarea name="honor_description[]" rows="2" placeholder="Awarded for academic excellence with CGPA 3.9/4.0"></textarea></label>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="form-actions" style="margin-top:12px;">
                         <button type="button" class="btn btn-secondary" onclick="addHonorRow()">Add Honor/Award</button>
@@ -445,6 +563,14 @@ function addHonorRow() {
         `;
     }
     container.appendChild(template);
+}
+
+// Delete row function
+function deleteRow(button) {
+    const row = button.closest('.skill-category-row, .project-row, .experience-row, .edu-row, .certification-row, .honor-row');
+    if (row) {
+        row.remove();
+    }
 }
 </script>
 {% endblock %}
