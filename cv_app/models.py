@@ -207,3 +207,36 @@ class JobRequirements(models.Model):
 
     def __str__(self):
         return self.job_title
+
+
+class Certification(models.Model):
+    name = models.CharField(max_length=200)
+    issuing_organization = models.CharField(max_length=200)
+    issue_date = models.CharField(max_length=100, help_text="e.g., Jan 2024")
+    expiration_date = models.CharField(max_length=100, blank=True, null=True, help_text="e.g., Jan 2027 or 'Does not expire'")
+    credential_id = models.CharField(max_length=200, blank=True, null=True)
+    credential_url = models.URLField(blank=True, null=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name_plural = 'Certifications'
+
+    def __str__(self):
+        return f"{self.name} - {self.issuing_organization}"
+
+
+class HonorAward(models.Model):
+    title = models.CharField(max_length=200)
+    issuer = models.CharField(max_length=200)
+    date_received = models.CharField(max_length=100, help_text="e.g., June 2023")
+    description = models.TextField(blank=True, null=True, help_text="Brief description of the honor/award")
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = 'Honor & Award'
+        verbose_name_plural = 'Honors & Awards'
+
+    def __str__(self):
+        return self.title
