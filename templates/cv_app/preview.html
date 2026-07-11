@@ -22,13 +22,13 @@
                     <span>{{ data.personal.email|default:'email@example.com' }}</span>
                     <span>{{ data.personal.phone|default:'Phone' }}</span>
                     {% if data.personal.linkedin %}
-                    <span><a href="{{ data.personal.linkedin }}" target="_blank">LinkedIn</a></span>
+                    <span><a href="{{ data.personal.linkedin }}" target="_blank" rel="noopener noreferrer">LinkedIn</a></span>
                     {% endif %}
                     {% if data.personal.github %}
-                    <span><a href="{{ data.personal.github }}" target="_blank">GitHub</a></span>
+                    <span><a href="{{ data.personal.github }}" target="_blank" rel="noopener noreferrer">GitHub</a></span>
                     {% endif %}
                     {% if data.personal.portfolio %}
-                    <span><a href="{{ data.personal.portfolio }}" target="_blank">Portfolio</a></span>
+                    <span><a href="{{ data.personal.portfolio }}" target="_blank" rel="noopener noreferrer">Portfolio</a></span>
                     {% endif %}
                 </div>
             </div>
@@ -57,7 +57,7 @@
                             <h3>
                                 {{ project.title }}
                                 {% if project.source_code_link %}
-                                    <span style="font-weight:600; margin-left: 8px;">[Source Code]</span>
+                                    <span style="font-weight:600; margin-left: 8px;"><a href="{{ project.source_code_link }}" target="_blank" rel="noopener noreferrer">[Source Code]</a></span>
                                 {% endif %}
                             </h3>
                             {% if project.description %}
@@ -68,10 +68,10 @@
                                 </ul>
                             {% endif %}
                             {% if project.source_code_link %}
-                                <p><small>[Source Code] {{ project.source_code_link }}</small></p>
+                                <p><small><a href="{{ project.source_code_link }}" target="_blank" rel="noopener noreferrer">[Source Code]</a> {{ project.source_code_link }}</small></p>
                             {% endif %}
                             {% if project.project_link %}
-                                <p><small>Project Link: {{ project.project_link }}</small></p>
+                                <p><small><a href="{{ project.project_link }}" target="_blank" rel="noopener noreferrer">Project Link</a>: {{ project.project_link }}</small></p>
                             {% endif %}
                         {% endif %}
                     {% endfor %}
@@ -112,6 +112,36 @@
                                 {% endfor %}
                             </ul>
                         {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if data.certifications %}
+            <div class="cv-section">
+                <h2>CERTIFICATIONS</h2>
+                {% for cert in data.certifications %}
+                    {% if cert.name or cert.issuer %}
+                        <p><b>{{ cert.name|default:'Certification' }}</b> — {{ cert.issuer|default:'Issuer' }}</p>
+                        {% if cert.date %}<p><small>Issued: {{ cert.date }}</small></p>{% endif %}
+                        {% if cert.expiration %}<p><small>Expires: {{ cert.expiration }}</small></p>{% endif %}
+                        {% if cert.credential_id %}<p><small>Credential ID: {{ cert.credential_id }}</small></p>{% endif %}
+                        {% if cert.credential_url %}<p><small><a href="{{ cert.credential_url }}" target="_blank" rel="noopener noreferrer">Verify Credential</a></small></p>{% endif %}
+                        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 8px 0;" />
+                    {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if data.honors_awards %}
+            <div class="cv-section">
+                <h2>HONORS & AWARDS</h2>
+                {% for honor in data.honors_awards %}
+                    {% if honor.title or honor.issuer %}
+                        <p><b>{{ honor.title|default:'Award' }}</b> — {{ honor.issuer|default:'Issuer' }}</p>
+                        {% if honor.date %}<p><small>{{ honor.date }}</small></p>{% endif %}
+                        {% if honor.description %}<p>{{ honor.description }}</p>{% endif %}
+                        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 8px 0;" />
                     {% endif %}
                 {% endfor %}
             </div>
