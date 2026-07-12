@@ -395,6 +395,7 @@ function addSkillCategoryRow() {
             <label style="display:none;" class="custom-category-wrapper">
                 Custom Category<input type="text" name="skill_custom_category[]" placeholder="Enter custom category" />
             </label>
+            <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="align-self: flex-start; height: fit-content; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
         `;
     }
     container.appendChild(template);
@@ -427,6 +428,16 @@ function addProjectRow() {
         template = container.children[0].cloneNode(true);
         template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
         template.querySelector('select').selectedIndex = 0;
+        // Add delete button if not present
+        if (!template.querySelector('.delete-row-btn')) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-danger btn-sm delete-row-btn';
+            deleteBtn.style.cssText = 'margin-top: 12px; padding: 8px 12px;';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function() { deleteRow(this); };
+            template.appendChild(deleteBtn);
+        }
     } else {
         template = document.createElement('div');
         template.className = 'project-row';
@@ -468,6 +479,7 @@ function addProjectRow() {
                 <label>Source Code Link (optional)<input name="source_code_link[]" placeholder="https://github.com/..." /></label>
                 <label>Project Link (optional)<input name="project_link[]" placeholder="https://your-deployed-url.com/" /></label>
             </div>
+            <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
         `;
     }
     container.appendChild(template);
@@ -479,6 +491,16 @@ function addExperienceRow() {
     if (container.children.length > 0) {
         template = container.children[0].cloneNode(true);
         template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+        // Add delete button if not present
+        if (!template.querySelector('.delete-row-btn')) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-danger btn-sm delete-row-btn';
+            deleteBtn.style.cssText = 'margin-top: 12px; padding: 8px 12px;';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function() { deleteRow(this); };
+            template.appendChild(deleteBtn);
+        }
     } else {
         template = document.createElement('div');
         template.className = 'experience-row';
@@ -490,6 +512,7 @@ function addExperienceRow() {
                 <label>Duration<input name="experience_period[]" placeholder="Jan 2023 - Present" /></label>
                 <label>Responsibilities<textarea name="experience_responsibilities[]" rows="4" placeholder="Developed and maintained REST APIs using Django REST Framework&#10;Implemented CI/CD pipelines using GitHub Actions&#10;Collaborated with cross-functional teams to deliver features on time"></textarea></label>
             </div>
+            <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
         `;
     }
     container.appendChild(template);
@@ -501,6 +524,16 @@ function addEducationRow() {
     if (container.children.length > 0) {
         template = container.children[0].cloneNode(true);
         template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+        // Add delete button if not present
+        if (!template.querySelector('.delete-row-btn')) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-danger btn-sm delete-row-btn';
+            deleteBtn.style.cssText = 'margin-top: 12px; padding: 8px 12px;';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function() { deleteRow(this); };
+            template.appendChild(deleteBtn);
+        }
     } else {
         template = document.createElement('div');
         template.className = 'edu-row';
@@ -514,6 +547,7 @@ function addEducationRow() {
                 <label>Max GPA<input name="education_gpa_max[]" placeholder="4.00" /></label>
                 <label>Details<textarea name="education_details[]" rows="2" placeholder="Relevant coursework: Data Structures, Algorithms, Machine Learning, Database Systems"></textarea></label>
             </div>
+            <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
         `;
     }
     container.appendChild(template);
@@ -525,6 +559,16 @@ function addCertificationRow() {
     if (container.children.length > 0) {
         template = container.children[0].cloneNode(true);
         template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+        // Add delete button if not present
+        if (!template.querySelector('.delete-row-btn')) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-danger btn-sm delete-row-btn';
+            deleteBtn.style.cssText = 'margin-top: 12px; padding: 8px 12px;';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function() { deleteRow(this); };
+            template.appendChild(deleteBtn);
+        }
     } else {
         template = document.createElement('div');
         template.className = 'certification-row';
@@ -538,6 +582,7 @@ function addCertificationRow() {
                 <label>Credential ID<input name="certification_credential_id[]" placeholder="ABC123XYZ (optional)" /></label>
                 <label>Credential URL<input name="certification_credential_url[]" placeholder="https://www.credly.com/badges/... (optional)" /></label>
             </div>
+            <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
         `;
     }
     container.appendChild(template);
@@ -549,6 +594,16 @@ function addHonorRow() {
     if (container.children.length > 0) {
         template = container.children[0].cloneNode(true);
         template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
+        // Add delete button if not present
+        if (!template.querySelector('.delete-row-btn')) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.type = 'button';
+            deleteBtn.className = 'btn btn-danger btn-sm delete-row-btn';
+            deleteBtn.style.cssText = 'margin-top: 12px; padding: 8px 12px;';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function() { deleteRow(this); };
+            template.appendChild(deleteBtn);
+        }
     } else {
         template = document.createElement('div');
         template.className = 'honor-row';
@@ -560,6 +615,7 @@ function addHonorRow() {
                 <label>Date Received<input name="honor_date[]" placeholder="June 2023" /></label>
                 <label>Description<textarea name="honor_description[]" rows="2" placeholder="Awarded for academic excellence with CGPA 3.9/4.0"></textarea></label>
             </div>
+            <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="margin-top: 12px; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
         `;
     }
     container.appendChild(template);
