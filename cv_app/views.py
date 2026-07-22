@@ -65,6 +65,15 @@ EMPTY_BUILDER_DATA = {
     'honors_awards': [],
 }
 
+# Project categories for combobox
+DEFAULT_PROJECT_CATEGORIES = [
+    'Machine Learning', 'Python', 'Django', 'Flask', 'FastAPI', 'ReactJS', 'AngularJS', 'VueJS',
+    'Event Management', 'Data Analysis', 'Web Scraping', 'Automation', 'Backend Development',
+    'Frontend Development', 'Full Stack', 'Mobile Development', 'DevOps', 'Cloud Computing',
+    'Cybersecurity', 'Blockchain', 'IoT', 'Game Development', 'Desktop Application',
+    'Research', 'Academic Project', 'Other'
+]
+
 DEFAULT_SKILL_CATEGORIES = [
     'Programming Languages',
     'Machine Learning & AI',
@@ -1432,6 +1441,7 @@ def builder(request):
         'data': data,
         'skill_categories': data.get('skill_categories', []),
         'default_skill_categories': DEFAULT_SKILL_CATEGORIES,
+        'defaultProjectCategories': DEFAULT_PROJECT_CATEGORIES,
     }
     return render(request, 'cv_app/builder.html', context)
 
