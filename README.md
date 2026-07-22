@@ -8,4 +8,3 @@ A complete ATS friendly CV builder website based on any kind of job requirements
 
 Md. Tushar Shihab<br>
 Python Developer and ML Engineer<br>
-Kryptogen Technology
