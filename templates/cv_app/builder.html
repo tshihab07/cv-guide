@@ -122,34 +122,17 @@
                                 <div class="form-grid">
                                     <label>Project Title<input name="project_title[]" value="{{ project.title }}" placeholder="Intelligent Loan Approval Prediction System" /></label>
                                     <label>Project Category
-                                        <select name="project_category[]">
-                                            <option value="Machine Learning" {% if project.category == "Machine Learning" %}selected{% endif %}>Machine Learning</option>
-                                            <option value="Python" {% if project.category == "Python" %}selected{% endif %}>Python</option>
-                                            <option value="Django" {% if project.category == "Django" %}selected{% endif %}>Django</option>
-                                            <option value="Flask" {% if project.category == "Flask" %}selected{% endif %}>Flask</option>
-                                            <option value="FastAPI" {% if project.category == "FastAPI" %}selected{% endif %}>FastAPI</option>
-                                            <option value="ReactJS" {% if project.category == "ReactJS" %}selected{% endif %}>ReactJS</option>
-                                            <option value="AngularJS" {% if project.category == "AngularJS" %}selected{% endif %}>AngularJS</option>
-                                            <option value="VueJS" {% if project.category == "VueJS" %}selected{% endif %}>VueJS</option>
-                                            <option value="Event Management" {% if project.category == "Event Management" %}selected{% endif %}>Event Management</option>
-                                            <option value="Data Analysis" {% if project.category == "Data Analysis" %}selected{% endif %}>Data Analysis</option>
-                                            <option value="Web Scraping" {% if project.category == "Web Scraping" %}selected{% endif %}>Web Scraping</option>
-                                            <option value="Automation" {% if project.category == "Automation" %}selected{% endif %}>Automation</option>
-                                            <option value="Backend Development" {% if project.category == "Backend Development" %}selected{% endif %}>Backend Development</option>
-                                            <option value="Frontend Development" {% if project.category == "Frontend Development" %}selected{% endif %}>Frontend Development</option>
-                                            <option value="Full Stack" {% if project.category == "Full Stack" %}selected{% endif %}>Full Stack</option>
-                                            <option value="Mobile Development" {% if project.category == "Mobile Development" %}selected{% endif %}>Mobile Development</option>
-                                            <option value="DevOps" {% if project.category == "DevOps" %}selected{% endif %}>DevOps</option>
-                                            <option value="Cloud Computing" {% if project.category == "Cloud Computing" %}selected{% endif %}>Cloud Computing</option>
-                                            <option value="Cybersecurity" {% if project.category == "Cybersecurity" %}selected{% endif %}>Cybersecurity</option>
-                                            <option value="Blockchain" {% if project.category == "Blockchain" %}selected{% endif %}>Blockchain</option>
-                                            <option value="IoT" {% if project.category == "IoT" %}selected{% endif %}>IoT</option>
-                                            <option value="Game Development" {% if project.category == "Game Development" %}selected{% endif %}>Game Development</option>
-                                            <option value="Desktop Application" {% if project.category == "Desktop Application" %}selected{% endif %}>Desktop Application</option>
-                                            <option value="Research" {% if project.category == "Research" %}selected{% endif %}>Research</option>
-                                            <option value="Academic Project" {% if project.category == "Academic Project" %}selected{% endif %}>Academic Project</option>
-                                            <option value="Other" {% if project.category == "Other" or project.category not in "Machine Learning Python Django Flask FastAPI ReactJS AngularJS VueJS Event Management Data Analysis Web Scraping Automation Backend Development Frontend Development Full Stack Mobile Development DevOps Cloud Computing Cybersecurity Blockchain IoT Game Development Desktop Application Research Academic Project Other" %}selected{% endif %}>Other</option>
-                                        </select>
+                                        <div class="combobox-wrapper">
+                                            <input type="text" name="project_category[]" class="form-control combobox-input project-category-combobox" value="{{ project.category }}" autocomplete="off" placeholder="Select or type category" aria-expanded="false" />
+                                            <div class="combobox-dropdown" role="listbox">
+                                                <ul class="combobox-options" role="presentation">
+                                                    {% for cat in defaultProjectCategories %}
+                                                        <li class="combobox-option" data-value="{{ cat }}">{{ cat }}</li>
+                                                    {% endfor %}
+                                                    <li class="combobox-option combobox-custom" data-value="custom">+ Add custom category...</li>
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </label>
                                     <label>Project Description<textarea name="project_description[]" rows="4" placeholder="Performed EDA and feature engineering on financial datasets and by using advanced machine learning models(Decision Tree, GBM, etc), the system captures complex patterns&#10;Reduced predicted default risk by 86% using XGBoost with optuna optimization&#10;Ensure fair and consistent evaluation&#10;Cut manual screening time by 67% through automated ML pipeline">{{ project.description }}</textarea></label>
                                     <label>Source Code Link (optional)<input name="source_code_link[]" value="{{ project.source_code_link }}" placeholder="https://github.com/..." /></label>
@@ -163,34 +146,17 @@
                                 <div class="form-grid">
                                     <label>Project Title<input name="project_title[]" placeholder="Intelligent Loan Approval Prediction System" /></label>
                                     <label>Project Category
-                                        <select name="project_category[]">
-                                            <option value="Machine Learning">Machine Learning</option>
-                                            <option value="Python">Python</option>
-                                            <option value="Django">Django</option>
-                                            <option value="Flask">Flask</option>
-                                            <option value="FastAPI">FastAPI</option>
-                                            <option value="ReactJS">ReactJS</option>
-                                            <option value="AngularJS">AngularJS</option>
-                                            <option value="VueJS">VueJS</option>
-                                            <option value="Event Management">Event Management</option>
-                                            <option value="Data Analysis">Data Analysis</option>
-                                            <option value="Web Scraping">Web Scraping</option>
-                                            <option value="Automation">Automation</option>
-                                            <option value="Backend Development">Backend Development</option>
-                                            <option value="Frontend Development">Frontend Development</option>
-                                            <option value="Full Stack">Full Stack</option>
-                                            <option value="Mobile Development">Mobile Development</option>
-                                            <option value="DevOps">DevOps</option>
-                                            <option value="Cloud Computing">Cloud Computing</option>
-                                            <option value="Cybersecurity">Cybersecurity</option>
-                                            <option value="Blockchain">Blockchain</option>
-                                            <option value="IoT">IoT</option>
-                                            <option value="Game Development">Game Development</option>
-                                            <option value="Desktop Application">Desktop Application</option>
-                                            <option value="Research">Research</option>
-                                            <option value="Academic Project">Academic Project</option>
-                                            <option value="Other">Other</option>
-                                        </select>
+                                        <div class="combobox-wrapper">
+                                            <input type="text" name="project_category[]" class="form-control combobox-input project-category-combobox" autocomplete="off" placeholder="Select or type category" aria-expanded="false" />
+                                            <div class="combobox-dropdown" role="listbox">
+                                                <ul class="combobox-options" role="presentation">
+                                                    {% for cat in defaultProjectCategories %}
+                                                        <li class="combobox-option" data-value="{{ cat }}">{{ cat }}</li>
+                                                    {% endfor %}
+                                                    <li class="combobox-option combobox-custom" data-value="custom">+ Add custom category...</li>
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </label>
                                     <label>Project Description<textarea name="project_description[]" rows="4" placeholder="Performed EDA and feature engineering on financial datasets and by using advanced machine learning models(Decision Tree, GBM, etc), the system captures complex patterns&#10;Reduced predicted default risk by 86% using XGBoost with optuna optimization&#10;Ensure fair and consistent evaluation&#10;Cut manual screening time by 67% through automated ML pipeline"></textarea></label>
                                     <label>Source Code Link (optional)<input name="source_code_link[]" placeholder="https://github.com/..." /></label>
@@ -442,6 +408,15 @@
 // Pass default skill categories from Django to JavaScript
 const defaultSkillCategories = {{ default_skill_categories|safe }};
 
+// Project categories for combobox
+const defaultProjectCategories = [
+    'Machine Learning', 'Python', 'Django', 'Flask', 'FastAPI', 'ReactJS', 'AngularJS', 'VueJS',
+    'Event Management', 'Data Analysis', 'Web Scraping', 'Automation', 'Backend Development',
+    'Frontend Development', 'Full Stack', 'Mobile Development', 'DevOps', 'Cloud Computing',
+    'Cybersecurity', 'Blockchain', 'IoT', 'Game Development', 'Desktop Application',
+    'Research', 'Academic Project', 'Other'
+];
+
 function addSkillCategoryRow() {
     const container = document.getElementById('skill-category-rows');
     let template;
@@ -486,7 +461,11 @@ function addProjectRow() {
     if (container.children.length > 0) {
         template = container.children[0].cloneNode(true);
         template.querySelectorAll('input, textarea').forEach(i => { i.value = ''; });
-        template.querySelector('select').selectedIndex = 0;
+        // Reset combobox if present
+        const combobox = template.querySelector('.project-category-combobox');
+        if (combobox) {
+            combobox.value = '';
+        }
         // Add delete button if not present
         if (!template.querySelector('.delete-row-btn')) {
             const deleteBtn = document.createElement('button');
@@ -501,38 +480,23 @@ function addProjectRow() {
         template = document.createElement('div');
         template.className = 'project-row';
         template.style.cssText = 'margin-bottom: 20px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);';
+        let optionsHtml = '';
+        defaultProjectCategories.forEach(cat => {
+            optionsHtml += `<li class="combobox-option" data-value="${cat}">${cat}</li>`;
+        });
+        optionsHtml += `<li class="combobox-option combobox-custom" data-value="custom">+ Add custom category...</li>`;
         template.innerHTML = `
             <div class="form-grid">
                 <label>Project Title<input name="project_title[]" placeholder="Intelligent Loan Approval Prediction System" /></label>
                 <label>Project Category
-                    <select name="project_category[]">
-                        <option value="Machine Learning">Machine Learning</option>
-                        <option value="Python">Python</option>
-                        <option value="Django">Django</option>
-                        <option value="Flask">Flask</option>
-                        <option value="FastAPI">FastAPI</option>
-                        <option value="ReactJS">ReactJS</option>
-                        <option value="AngularJS">AngularJS</option>
-                        <option value="VueJS">VueJS</option>
-                        <option value="Event Management">Event Management</option>
-                        <option value="Data Analysis">Data Analysis</option>
-                        <option value="Web Scraping">Web Scraping</option>
-                        <option value="Automation">Automation</option>
-                        <option value="Backend Development">Backend Development</option>
-                        <option value="Frontend Development">Frontend Development</option>
-                        <option value="Full Stack">Full Stack</option>
-                        <option value="Mobile Development">Mobile Development</option>
-                        <option value="DevOps">DevOps</option>
-                        <option value="Cloud Computing">Cloud Computing</option>
-                        <option value="Cybersecurity">Cybersecurity</option>
-                        <option value="Blockchain">Blockchain</option>
-                        <option value="IoT">IoT</option>
-                        <option value="Game Development">Game Development</option>
-                        <option value="Desktop Application">Desktop Application</option>
-                        <option value="Research">Research</option>
-                        <option value="Academic Project">Academic Project</option>
-                        <option value="Other">Other</option>
-                    </select>
+                    <div class="combobox-wrapper">
+                        <input type="text" name="project_category[]" class="form-control combobox-input project-category-combobox" autocomplete="off" placeholder="Select or type category" aria-expanded="false" />
+                        <div class="combobox-dropdown" role="listbox">
+                            <ul class="combobox-options" role="presentation">
+                                ${optionsHtml}
+                            </ul>
+                        </div>
+                    </div>
                 </label>
                 <label>Project Description<textarea name="project_description[]" rows="4" placeholder="Performed EDA and feature engineering on financial datasets...&#10;Reduced predicted default risk by 86% using XGBoost with optuna optimization&#10;Ensure fair and consistent evaluation&#10;Cut manual screening time by 67% through automated ML pipeline"></textarea></label>
                 <label>Source Code Link (optional)<input name="source_code_link[]" placeholder="https://github.com/..." /></label>
@@ -542,6 +506,11 @@ function addProjectRow() {
         `;
     }
     container.appendChild(template);
+    // Initialize combobox for new row
+    const combobox = template.querySelector('.project-category-combobox');
+    if (combobox) {
+        initCombobox(combobox);
+    }
 }
 
 function addExperienceRow() {
@@ -828,6 +797,9 @@ function initCombobox(input) {
 // Initialize comboboxes on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.skill-category-combobox').forEach(input => {
+        initCombobox(input);
+    });
+    document.querySelectorAll('.project-category-combobox').forEach(input => {
         initCombobox(input);
     });
 });
