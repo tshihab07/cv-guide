@@ -78,7 +78,7 @@ DEFAULT_SKILL_CATEGORIES = [
     'Dev Tools & IDEs',
     'Software Testing & QA',
     'Project Management & Soft Skills',
-    'Mobile Development',
+    'Mobile App Development',
     'Cybersecurity',
     'Data Engineering',
     'API Development & Integration',
@@ -680,8 +680,8 @@ SKILL_KEYWORD_MAP = {
         ('scrum master', 'Scrum Master'),
         ('product owner', 'Product Owner'),
     ],
-    'Mobile Development': [
-        ('mobile development', 'Mobile Development'),
+    'Mobile App Development': [
+        ('mobile app development', 'Mobile App Development'),
         ('ios', 'iOS Development'),
         ('android', 'Android Development'),
         ('swift', 'Swift'),
@@ -1299,8 +1299,8 @@ def builder(request):
             category_items = request.POST.getlist('skill_items[]')
             custom_categories = request.POST.getlist('skill_custom_category[]')
             for i, (cat, items) in enumerate(zip(category_names, category_items)):
-                # If "Other" is selected, use the custom category
-                if cat.strip() == 'Other' and i < len(custom_categories) and custom_categories[i].strip():
+                # If custom category is provided, use it instead
+                if i < len(custom_categories) and custom_categories[i].strip():
                     cat = custom_categories[i].strip()
                 if cat.strip() or items.strip():
                     skill_categories.append({'category': cat.strip(), 'items': items.strip()})
