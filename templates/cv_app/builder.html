@@ -69,34 +69,40 @@
                             {% for cat in data.skill_categories %}
                             <div class="skill-category-row form-grid" style="margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
                                 <label>Category
-                                    <select name="skill_category[]" class="form-control skill-category-select">
-                                        {% for default_cat in default_skill_categories %}
-                                            <option value="{{ default_cat }}" {% if default_cat == cat.category %}selected{% endif %}>{{ default_cat }}</option>
-                                        {% endfor %}
-                                        <option value="Other" {% if cat.category not in default_skill_categories %}selected{% endif %}>Other</option>
-                                    </select>
+                                    <div class="combobox-wrapper">
+                                        <input type="text" name="skill_category[]" class="form-control combobox-input skill-category-combobox" value="{{ cat.category }}" autocomplete="off" placeholder="Select or type category" />
+                                        <input type="hidden" name="skill_custom_category[]" class="skill-custom-category" value="{% if cat.category not in default_skill_categories %}{{ cat.category }}{% endif %}" />
+                                        <div class="combobox-dropdown">
+                                            <ul class="combobox-options">
+                                                {% for default_cat in default_skill_categories %}
+                                                    <li class="combobox-option" data-value="{{ default_cat }}">{{ default_cat }}</li>
+                                                {% endfor %}
+                                                <li class="combobox-option combobox-custom" data-value="custom">+ Add custom category...</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </label>
                                 <label>Skills (comma separated)<textarea name="skill_items[]" rows="2">{{ cat.items }}</textarea></label>
-                                <label style="display: {% if cat.category == 'Other' or cat.category not in default_skill_categories %}flex{% else %}none{% endif %};">
-                                    Custom Category<input name="skill_custom_category[]" type="text" value="{{ cat.category|default:'' }}" placeholder="Enter custom category name" />
-                                </label>
                                 <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="align-self: flex-start; height: fit-content; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
                             </div>
                             {% endfor %}
                         {% else %}
                             <div class="skill-category-row form-grid" style="margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
                                 <label>Category
-                                    <select name="skill_category[]" class="form-control skill-category-select">
-                                        {% for default_cat in default_skill_categories %}
-                                            <option value="{{ default_cat }}">{{ default_cat }}</option>
-                                        {% endfor %}
-                                        <option value="Other">Other</option>
-                                    </select>
+                                    <div class="combobox-wrapper">
+                                        <input type="text" name="skill_category[]" class="form-control combobox-input skill-category-combobox" autocomplete="off" placeholder="Select or type category" />
+                                        <input type="hidden" name="skill_custom_category[]" class="skill-custom-category" value="" />
+                                        <div class="combobox-dropdown">
+                                            <ul class="combobox-options">
+                                                {% for default_cat in default_skill_categories %}
+                                                    <li class="combobox-option" data-value="{{ default_cat }}">{{ default_cat }}</li>
+                                                {% endfor %}
+                                                <li class="combobox-option combobox-custom" data-value="custom">+ Add custom category...</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </label>
                                 <label>Skills (comma separated)<textarea name="skill_items[]" rows="2"></textarea></label>
-                                <label style="display: none;">
-                                    Custom Category<input name="skill_custom_category[]" type="text" placeholder="Enter custom category name" />
-                                </label>
                                 <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="align-self: flex-start; height: fit-content; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
                             </div>
                         {% endif %}
@@ -360,6 +366,78 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+.combobox-wrapper {
+    position: relative;
+    width: 100%;
+}
+.combobox-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.combobox-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+.combobox-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+}
+.combobox-dropdown.open {
+    display: block;
+}
+.combobox-options {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+}
+.combobox-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text);
+    transition: background 0.15s;
+}
+.combobox-option:hover,
+.combobox-option.highlighted {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+.combobox-option.combobox-custom {
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    padding-top: 12px;
+    font-weight: 500;
+    color: var(--primary);
+}
+.combobox-option.combobox-custom:hover {
+    background: var(--primary-light);
+}
+.combobox-input:focus + .combobox-dropdown,
+.combobox-wrapper:hover .combobox-dropdown.open {
+    display: block;
+}
+.combobox-input[aria-expanded="true"] + .combobox-dropdown {
+    display: block;
+}
+</style>
 <script>
 // Pass default skill categories from Django to JavaScript
 const defaultSkillCategories = {{ default_skill_categories|safe }};
@@ -369,57 +447,38 @@ function addSkillCategoryRow() {
     let template;
     if (container.children.length > 0) {
         template = container.children[0].cloneNode(true);
-        template.querySelectorAll('input, textarea, select').forEach(i => {
-            if (i.tagName === 'SELECT') {
-                i.selectedIndex = 0;
-            } else {
-                i.value = '';
-            }
+        template.querySelectorAll('input, textarea').forEach(i => {
+            i.value = '';
         });
+        template.querySelector('.skill-custom-category').value = '';
     } else {
         template = document.createElement('div');
         template.className = 'skill-category-row form-grid';
         template.style.cssText = 'margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);';
         let optionsHtml = '';
         defaultSkillCategories.forEach(cat => {
-            optionsHtml += `<option value="${cat}">${cat}</option>`;
+            optionsHtml += `<li class="combobox-option" data-value="${cat}">${cat}</li>`;
         });
-        optionsHtml += `<option value="Other">Other</option>`;
+        optionsHtml += `<li class="combobox-option combobox-custom" data-value="custom">+ Add custom category...</li>`;
         template.innerHTML = `
             <label>Category
-                <select name="skill_category[]" class="form-control skill-category-select">
-                    ${optionsHtml}
-                </select>
+                <div class="combobox-wrapper">
+                    <input type="text" name="skill_category[]" class="form-control combobox-input skill-category-combobox" autocomplete="off" placeholder="Select or type category" aria-expanded="false" aria-controls="combobox-options" />
+                    <input type="hidden" name="skill_custom_category[]" class="skill-custom-category" value="" />
+                    <div class="combobox-dropdown" role="listbox">
+                        <ul class="combobox-options" id="combobox-options" role="presentation">
+                            ${optionsHtml}
+                        </ul>
+                    </div>
+                </div>
             </label>
             <label>Skills (comma separated)<textarea name="skill_items[]" rows="2"></textarea></label>
-            <label style="display:none;" class="custom-category-wrapper">
-                Custom Category<input type="text" name="skill_custom_category[]" placeholder="Enter custom category" />
-            </label>
             <button type="button" class="btn btn-danger btn-sm delete-row-btn" style="align-self: flex-start; height: fit-content; padding: 8px 12px;" onclick="deleteRow(this)">Delete</button>
         `;
     }
     container.appendChild(template);
-    // Add event listener for "Other" option
-    template.querySelector('.skill-category-select').addEventListener('change', handleSkillCategoryChange);
+    initCombobox(template.querySelector('.skill-category-combobox'));
 }
-
-function handleSkillCategoryChange(e) {
-    const wrapper = e.target.closest('.skill-category-row').querySelector('.custom-category-wrapper');
-    if (e.target.value === 'Other') {
-        wrapper.style.display = 'flex';
-        wrapper.querySelector('input').required = true;
-    } else {
-        wrapper.style.display = 'none';
-        wrapper.querySelector('input').required = false;
-    }
-}
-
-// Initialize event listeners for existing skill category selects
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.skill-category-select').forEach(select => {
-        select.addEventListener('change', handleSkillCategoryChange);
-    });
-});
 
 function addProjectRow() {
     const container = document.getElementById('project-rows');
@@ -628,5 +687,149 @@ function deleteRow(button) {
         row.remove();
     }
 }
+
+// Combobox initialization and handling
+function initCombobox(input) {
+    const wrapper = input.closest('.combobox-wrapper');
+    const dropdown = wrapper.querySelector('.combobox-dropdown');
+    const options = wrapper.querySelectorAll('.combobox-option');
+    const hiddenInput = wrapper.querySelector('.skill-custom-category');
+    let highlightedIndex = -1;
+
+    // Toggle dropdown
+    input.addEventListener('focus', () => {
+        dropdown.classList.add('open');
+        input.setAttribute('aria-expanded', 'true');
+        filterOptions('');
+    });
+
+    input.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.add('open');
+        input.setAttribute('aria-expanded', 'true');
+        filterOptions(input.value);
+    });
+
+    // Filter options on input
+    input.addEventListener('input', () => {
+        filterOptions(input.value);
+    });
+
+    // Keyboard navigation
+    input.addEventListener('keydown', (e) => {
+        if (!dropdown.classList.contains('open')) return;
+        
+        const visibleOptions = Array.from(options).filter(opt => opt.style.display !== 'none');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            highlightedIndex = Math.min(highlightedIndex + 1, visibleOptions.length - 1);
+            highlightOption(visibleOptions);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            highlightedIndex = Math.max(highlightedIndex - 1, -1);
+            highlightOption(visibleOptions);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightedIndex >= 0 && visibleOptions[highlightedIndex]) {
+                selectOption(visibleOptions[highlightedIndex]);
+            } else if (input.value.trim()) {
+                // Allow custom input
+                setCustomValue(input.value.trim());
+            }
+        } else if (e.key === 'Escape') {
+            closeDropdown();
+        } else if (e.key === 'Tab') {
+            closeDropdown();
+        }
+    });
+
+    // Click outside to close
+    document.addEventListener('click', (e) => {
+        if (!wrapper.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+
+    // Option click handlers
+    options.forEach(option => {
+        option.addEventListener('click', () => selectOption(option));
+        option.addEventListener('mouseenter', () => {
+            options.forEach(o => o.classList.remove('highlighted'));
+            option.classList.add('highlighted');
+        });
+    });
+
+    function filterOptions(query) {
+        const lowerQuery = query.toLowerCase();
+        let hasVisibleOptions = false;
+        
+        options.forEach((option, index) => {
+            const text = option.textContent.toLowerCase();
+            const isCustom = option.classList.contains('combobox-custom');
+            
+            if (isCustom || text.includes(lowerQuery)) {
+                option.style.display = '';
+                hasVisibleOptions = true;
+            } else {
+                option.style.display = 'none';
+            }
+        });
+
+        highlightedIndex = -1;
+        dropdown.classList.toggle('open', hasVisibleOptions);
+        input.setAttribute('aria-expanded', hasVisibleOptions);
+    }
+
+    function highlightOption(visibleOptions) {
+        visibleOptions.forEach((opt, idx) => {
+            opt.classList.toggle('highlighted', idx === highlightedIndex);
+        });
+    }
+
+    function selectOption(option) {
+        const value = option.dataset.value;
+        const isCustom = option.classList.contains('combobox-custom');
+        
+        if (isCustom || value === 'custom') {
+            // Show input for custom value
+            input.value = '';
+            input.placeholder = 'Type custom category...';
+            hiddenInput.value = '';
+            closeDropdown();
+            input.focus();
+        } else {
+            input.value = value;
+            hiddenInput.value = '';
+            closeDropdown();
+        }
+    }
+
+    function setCustomValue(value) {
+        input.value = value;
+        hiddenInput.value = value;
+        closeDropdown();
+    }
+
+    function closeDropdown() {
+        dropdown.classList.remove('open');
+        input.setAttribute('aria-expanded', 'false');
+        highlightedIndex = -1;
+        options.forEach(o => o.classList.remove('highlighted'));
+    }
+
+    // Initialize: if input has value that's not in default categories, set as custom
+    const initialValue = input.value.trim();
+    if (initialValue && !Array.from(options).some(o => o.dataset.value === initialValue && !o.classList.contains('combobox-custom'))) {
+        hiddenInput.value = initialValue;
+    }
+}
+
+// Initialize comboboxes on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.skill-category-combobox').forEach(input => {
+        initCombobox(input);
+    });
+});
 </script>
 {% endblock %}
