@@ -294,20 +294,19 @@ def builder(request):
             experience_periods = request.POST.getlist('experience_period[]')
             experience_responsibilities = request.POST.getlist('experience_responsibilities[]')
 
-            if company_names or experience_roles:
-                data['experience'] = [
-                    {
-                        'company': company.strip(),
-                        'role': role.strip(),
-                        'period': period.strip(),
-                        'responsibilities': responsibilities.strip(),
-                    }
+            data['experience'] = [
+                {
+                    'company': company.strip(),
+                    'role': role.strip(),
+                    'period': period.strip(),
+                    'responsibilities': responsibilities.strip(),
+                }
 
-                    for company, role, period, responsibilities in zip(
-                        company_names, experience_roles, experience_periods, experience_responsibilities
-                    )
-                    if company.strip() or role.strip() or period.strip() or responsibilities.strip()
-                ]
+                for company, role, period, responsibilities in zip(
+                    company_names, experience_roles, experience_periods, experience_responsibilities
+                )
+                if company.strip() or role.strip() or period.strip() or responsibilities.strip()
+            ]
 
         elif step == 6:
             degrees = request.POST.getlist('education_degree[]')
