@@ -17,7 +17,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
-from reportlab.platypus import ListFlowable, ListItem, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import ListFlowable, ListItem, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from .forms import BenefitItemForm, FAQItemForm, FeatureItemForm, LandingPageContentForm, ProcessStepForm, TestimonialForm
 from .models import BenefitItem, FAQItem, FeatureItem, LandingPageContent, ProcessStep, Testimonial
@@ -436,14 +436,13 @@ def download_pdf(request):
     )
     styles = getSampleStyleSheet()
 
+    # Available width = 8.5 - 0.5 - 0.5 = 7.5 inches
+    avail_width = 7.5 * inch
+
     center_style = ParagraphStyle(
         'Center', parent=styles['Normal'],
         fontName='Helvetica', fontSize=11, leading=14,
         textColor=colors.HexColor('#111827'), alignment=1
-    )
-    center_bold_style = ParagraphStyle(
-        'CenterBold', parent=center_style,
-        fontName='Helvetica-Bold'
     )
     name_style = ParagraphStyle(
         'Name', parent=styles['Normal'],
@@ -454,11 +453,6 @@ def download_pdf(request):
         'Heading', parent=styles['Normal'],
         fontName='Helvetica-Bold', fontSize=14, leading=17,
         textColor=colors.HexColor('#111827'), spaceAfter=6
-    )
-    skill_cat_style = ParagraphStyle(
-        'SkillCat', parent=styles['Normal'],
-        fontName='Helvetica-Bold', fontSize=12, leading=15,
-        textColor=colors.HexColor('#111827')
     )
     body_style = ParagraphStyle(
         'Body', parent=styles['Normal'],
@@ -478,24 +472,30 @@ def download_pdf(request):
         'Bullet', parent=body_style,
         leftIndent=18, bulletIndent=6, spaceBefore=1, spaceAfter=1
     )
+    project_link_style = ParagraphStyle(
+        'ProjectLink', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=11, leading=14,
+        textColor=colors.HexColor('#1d4ed8'), alignment=0
+    )
     project_title_style = ParagraphStyle(
         'ProjectTitle', parent=styles['Normal'],
         fontName='Helvetica-Bold', fontSize=12, leading=15,
         textColor=colors.HexColor('#111827')
     )
-    project_link_style = ParagraphStyle(
-        'ProjectLink', parent=styles['Normal'],
-        fontName='Helvetica', fontSize=11, leading=14,
-        textColor=colors.HexColor('#1d4ed8'), alignment=1
+    project_source_style = ParagraphStyle(
+        'ProjectSource', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=12, leading=15,
+        alignment=2, textColor=colors.HexColor('#1d4ed8')
     )
 
     story = []
 
-    # Header - Name centered
+    # ===== HEADER - All Center Aligned =====
+    # Line 1: Name
     name = data['personal'].get('full_name') or 'Your Name'
     story.append(Paragraph(name, name_style))
 
-    # Contact info line - centered with pipes
+    # Line 2: Phone | Email | Location | LinkedIn | GitHub | Portfolio (ALL on ONE line)
     contact_parts = []
     if data['personal'].get('phone'):
         contact_parts.append(data['personal'].get('phone'))
@@ -503,38 +503,36 @@ def download_pdf(request):
         contact_parts.append(data['personal'].get('email'))
     if data['personal'].get('location'):
         contact_parts.append(data['personal'].get('location'))
-    if contact_parts:
-        story.append(Paragraph(' | '.join(contact_parts), center_style))
 
-    # Links line - centered with clickable links
-    links = []
+    # Add clickable profile links
     if data['personal'].get('linkedin'):
         url = data['personal'].get('linkedin')
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
-        links.append(f'<a href="{url}" color="#1d4ed8">LinkedIn</a>')
+        contact_parts.append(f'<a href="{url}" color="#1d4ed8">LinkedIn</a>')
     if data['personal'].get('github'):
         url = data['personal'].get('github')
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
-        links.append(f'<a href="{url}" color="#1d4ed8">GitHub</a>')
+        contact_parts.append(f'<a href="{url}" color="#1d4ed8">GitHub</a>')
     if data['personal'].get('portfolio'):
         url = data['personal'].get('portfolio')
         if not url.startswith(('http://', 'https://')):
             url = 'https://' + url
-        links.append(f'<a href="{url}" color="#1d4ed8">Portfolio</a>')
-    if links:
-        story.append(Paragraph(' | '.join(links), center_style))
+        contact_parts.append(f'<a href="{url}" color="#1d4ed8">Portfolio</a>')
+
+    if contact_parts:
+        story.append(Paragraph(' | '.join(contact_parts), center_style))
 
     story.append(Spacer(1, 6))
 
-    # PROFESSIONAL SUMMARY
+    # ===== PROFESSIONAL SUMMARY =====
     if generated_summary and generated_summary.strip():
         story.append(Paragraph('PROFESSIONAL SUMMARY', heading_style))
         story.append(Paragraph(generated_summary, body_style))
         story.append(Spacer(1, 6))
 
-    # TECHNICAL SKILLS
+    # ===== TECHNICAL SKILLS =====
     skill_cats = [c for c in data.get('skill_categories', []) if c.get('items', '').strip()]
     if skill_cats:
         story.append(Paragraph('TECHNICAL SKILLS', heading_style))
@@ -542,59 +540,66 @@ def download_pdf(request):
             story.append(Paragraph(f"<b>{category.get('category')}</b>: {category.get('items')}", body_style))
         story.append(Spacer(1, 6))
 
-    # PROJECTS
+    # ===== PROJECTS =====
     projects = [p for p in data.get('projects', []) if p.get('title', '').strip() or p.get('description', '').strip()]
     if projects:
         story.append(Paragraph('PROJECTS', heading_style))
         for project in projects:
-            # Title on left, Source Code on right
-            title = project.get('title') or 'Project'
+            title = project.get('title', '').strip() or 'Project'
             source_code = project.get('source_code_link', '').strip()
+            description = project.get('description', '').strip()
+            project_link = project.get('project_link', '').strip()
+
+            # Title line: Title LEFT, [Source Code] RIGHT (clickable) - use Table for perfect alignment
             if source_code:
                 if not source_code.startswith(('http://', 'https://')):
                     source_code = 'https://' + source_code
-                title_html = f'<b>{title}</b>'
-                # Use a table-like approach with left/right alignment via font tags
-                story.append(Paragraph(
-                    f'<font face="Helvetica-Bold" size="12">{title}</font>'
-                    f'<font face="Helvetica" size="12" color="#1d4ed8">'
-                    f'<a href="{source_code}">[Source Code]</a></font>',
-                    project_title_style
-                ))
+                title_para = Paragraph(f'<b>{title}</b>', project_title_style)
+                source_para = Paragraph(f'<a href="{source_code}" color="#1d4ed8">[Source Code]</a>', project_source_style)
+                
+                # Table with 2 columns: title (left), source code (right)
+                table = Table([[title_para, source_para]], colWidths=[avail_width * 0.75, avail_width * 0.25])
+                table.setStyle(TableStyle([
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                    ('TOPPADDING', (0, 0), (-1, -1), 0),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                ]))
+                story.append(table)
             else:
                 story.append(Paragraph(f'<b>{title}</b>', project_title_style))
 
-            # Description as bullet points
-            desc = project.get('description', '').strip()
-            if desc:
+            # Description as bullet points (NO extra bullet before the list)
+            if description:
                 bullets = []
-                for line in desc.splitlines():
+                for line in description.splitlines():
                     line = line.strip()
                     if line:
                         bullets.append(line)
                 if not bullets:
-                    bullets = [desc]
+                    bullets = [description]
+                
                 story.append(
                     ListFlowable(
-                        [ListItem(Paragraph(f"• {b}", bullet_style), bulletColor=colors.HexColor('#2563eb')) for b in bullets],
+                        [ListItem(Paragraph(b, bullet_style), bulletColor=colors.HexColor('#2563eb')) for b in bullets],
                         bulletType='bullet',
                     )
                 )
 
-            # Project link at bottom
-            proj_link = project.get('project_link', '').strip()
-            if proj_link:
-                if not proj_link.startswith(('http://', 'https://')):
-                    proj_link = 'https://' + proj_link
+            # Project link at bottom (left-aligned)
+            if project_link:
+                if not project_link.startswith(('http://', 'https://')):
+                    project_link = 'https://' + project_link
                 story.append(Paragraph(
-                    f'Project Link: <a href="{proj_link}" color="#1d4ed8">{proj_link}</a>',
+                    f'Project Link: <a href="{project_link}" color="#1d4ed8">{project_link}</a>',
                     project_link_style
                 ))
 
             story.append(Spacer(1, 4))
         story.append(Spacer(1, 6))
 
-    # EDUCATION
+    # ===== EDUCATION =====
     education_list = [e for e in data.get('education', []) if e.get('degree', '').strip() or e.get('institution', '').strip()]
     if education_list:
         story.append(Paragraph('EDUCATION', heading_style))
@@ -625,7 +630,7 @@ def download_pdf(request):
             story.append(Spacer(1, 4))
         story.append(Spacer(1, 6))
 
-    # EXPERIENCE
+    # ===== EXPERIENCE =====
     experience_list = [e for e in data.get('experience', []) if e.get('company', '').strip() or e.get('role', '').strip()]
     if experience_list:
         story.append(Paragraph('EXPERIENCE', heading_style))
@@ -650,7 +655,7 @@ def download_pdf(request):
                 if resp_items:
                     story.append(
                         ListFlowable(
-                            [ListItem(Paragraph(f"• {item}", bullet_style), bulletColor=colors.HexColor('#2563eb')) for item in resp_items],
+                            [ListItem(Paragraph(item, bullet_style), bulletColor=colors.HexColor('#2563eb')) for item in resp_items],
                             bulletType='bullet',
                         )
                     )
@@ -658,7 +663,7 @@ def download_pdf(request):
             story.append(Spacer(1, 4))
         story.append(Spacer(1, 6))
 
-    # CERTIFICATIONS
+    # ===== CERTIFICATIONS =====
     certs = [c for c in data.get('certifications', []) if c.get('name', '').strip() or c.get('issuer', '').strip()]
     if certs:
         story.append(Paragraph('CERTIFICATIONS', heading_style))
@@ -690,7 +695,7 @@ def download_pdf(request):
             story.append(Spacer(1, 4))
         story.append(Spacer(1, 6))
 
-    # HONORS & AWARDS
+    # ===== HONORS & AWARDS =====
     honors = [h for h in data.get('honors_awards', []) if h.get('title', '').strip() or h.get('issuer', '').strip()]
     if honors:
         story.append(Paragraph('HONORS & AWARDS', heading_style))
@@ -819,7 +824,8 @@ def download_docx(request):
         run_n.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
         return p
 
-    # ===== HEADER =====
+    # ===== HEADER - All Center Aligned =====
+    # Line 1: Name
     name = data['personal'].get('full_name') or 'Your Name'
     p = document.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -832,7 +838,7 @@ def download_docx(request):
     run.font.bold = True
     run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
 
-    # Contact line
+    # Line 2: Phone | Email | Location | LinkedIn | GitHub | Portfolio (ALL on ONE line)
     contact_parts = []
     if data['personal'].get('phone'):
         contact_parts.append(data['personal'].get('phone'))
@@ -840,10 +846,7 @@ def download_docx(request):
         contact_parts.append(data['personal'].get('email'))
     if data['personal'].get('location'):
         contact_parts.append(data['personal'].get('location'))
-    if contact_parts:
-        add_centered_paragraph(' | '.join(contact_parts), size=Pt(11), color=RGBColor(0x4B, 0x55, 0x63))
 
-    # Links line with clickable hyperlinks
     links = []
     if data['personal'].get('linkedin'):
         links.append(('LinkedIn', data['personal'].get('linkedin')))
@@ -852,22 +855,36 @@ def download_docx(request):
     if data['personal'].get('portfolio'):
         links.append(('Portfolio', data['personal'].get('portfolio')))
 
-    if links:
+    # Add clickable profile links to contact parts
+    for label, url in links:
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        contact_parts.append((label, url))
+
+    if contact_parts:
         p = document.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.paragraph_format.space_after = Pt(6)
         p.paragraph_format.space_before = Pt(0)
         p.paragraph_format.line_spacing = Pt(14)
-        for i, (label, url) in enumerate(links):
-            if not url.startswith(('http://', 'https://')):
-                url = 'https://' + url
+        
+        for i, item in enumerate(contact_parts):
             if i > 0:
                 run = p.add_run(' | ')
                 run.font.name = 'Calibri'
                 run.font.size = Pt(11)
                 run.font.color.rgb = RGBColor(0x4B, 0x55, 0x63)
-            _add_hyperlink(p, label, url)
-            # The hyperlink function already styles the text
+            
+            if isinstance(item, tuple):
+                # It's a link (label, url)
+                label, url = item
+                _add_hyperlink(p, label, url)
+            else:
+                # It's plain text (phone, email, location)
+                run = p.add_run(item)
+                run.font.name = 'Calibri'
+                run.font.size = Pt(11)
+                run.font.color.rgb = RGBColor(0x4B, 0x55, 0x63)
 
     # ===== PROFESSIONAL SUMMARY =====
     if generated_summary and generated_summary.strip():
@@ -907,27 +924,44 @@ def download_docx(request):
             description = project.get('description', '').strip()
             project_link = project.get('project_link', '').strip()
 
-            # Title line with source code on right
+            # Title line: Title LEFT, [Source Code] RIGHT (clickable)
             if source_code:
                 if not source_code.startswith(('http://', 'https://')):
                     source_code = 'https://' + source_code
-                p = document.add_paragraph()
-                p.paragraph_format.space_after = Pt(0)
-                p.paragraph_format.space_before = Pt(0)
-                p.paragraph_format.line_spacing = Pt(15)
-                run_title = p.add_run(title)
+                # Create a table with 2 columns for perfect alignment
+                table = document.add_table(rows=1, cols=2)
+                table.autofit = True
+                table.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                
+                # Left cell - Title
+                left_cell = table.cell(0, 0)
+                left_para = left_cell.paragraphs[0]
+                left_para.paragraph_format.space_after = Pt(0)
+                left_para.paragraph_format.space_before = Pt(0)
+                left_para.paragraph_format.line_spacing = Pt(15)
+                run_title = left_para.add_run(title)
                 run_title.font.name = 'Calibri'
                 run_title.font.size = Pt(12)
                 run_title.font.bold = True
                 run_title.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
-                # Add spacing to push source code to right
-                run_spacer = p.add_run('\t')
-                run_spacer.font.size = Pt(12)
-                _add_hyperlink(p, '[Source Code]', source_code)
+                
+                # Right cell - Source Code
+                right_cell = table.cell(0, 1)
+                right_para = right_cell.paragraphs[0]
+                right_para.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                right_para.paragraph_format.space_after = Pt(0)
+                right_para.paragraph_format.space_before = Pt(0)
+                right_para.paragraph_format.line_spacing = Pt(15)
+                _add_hyperlink(right_para, '[Source Code]', source_code)
+                
+                # Set column widths
+                for row in table.rows:
+                    row.cells[0].width = Inches(5.5)
+                    row.cells[1].width = Inches(1.5)
             else:
                 add_justified_paragraph(title, bold=True, size=Pt(12), space_after=Pt(0))
 
-            # Description as bullet points
+            # Description as bullet points (NO extra bullet before the list)
             if description:
                 bullets = [line.strip() for line in description.splitlines() if line.strip()]
                 if not bullets:
@@ -935,7 +969,7 @@ def download_docx(request):
                 for bullet in bullets:
                     add_bullet_point(bullet)
 
-            # Project link at bottom
+            # Project link at bottom (left-aligned)
             if project_link:
                 if not project_link.startswith(('http://', 'https://')):
                     project_link = 'https://' + project_link
