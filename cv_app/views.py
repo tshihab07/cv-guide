@@ -1,6 +1,8 @@
 import re
 from copy import deepcopy
 from io import BytesIO
+from docx.oxml.ns import qn, nsdecls
+from docx.oxml import parse_xml
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -9,7 +11,7 @@ from django.forms import modelformset_factory
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from docx import Document
-from docx.shared import Pt, RGBColor
+from docx.shared import Pt, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -427,198 +429,286 @@ def download_pdf(request):
     doc = SimpleDocTemplate(
         buffer,
         pagesize=letter,
-        rightMargin=0.75 * inch,
-        leftMargin=0.75 * inch,
-        topMargin=0.75 * inch,
-        bottomMargin=0.75 * inch,
+        rightMargin=0.5 * inch,
+        leftMargin=0.5 * inch,
+        topMargin=0.5 * inch,
+        bottomMargin=0.5 * inch,
     )
     styles = getSampleStyleSheet()
-    
-    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontName='Helvetica-Bold', fontSize=20, leading=24, textColor=colors.HexColor('#1d4ed8'))
-    heading_style = ParagraphStyle('Heading', parent=styles['Heading2'], fontName='Helvetica-Bold', fontSize=13, leading=15, textColor=colors.HexColor('#111827'))
-    subheading_style = ParagraphStyle('SubHeading', parent=styles['Heading3'], fontName='Helvetica-Bold', fontSize=11, leading=13, textColor=colors.HexColor('#1d4ed8'))
-    body_style = ParagraphStyle('Body', parent=styles['BodyText'], fontName='Helvetica', fontSize=10, leading=13, textColor=colors.HexColor('#111827'))
-    small_style = ParagraphStyle('Small', parent=styles['BodyText'], fontName='Helvetica', fontSize=9, leading=11, textColor=colors.HexColor('#4b5563'))
-    bullet_style = ParagraphStyle('Bullet', parent=body_style, leftIndent=20, bulletIndent=10)
+
+    center_style = ParagraphStyle(
+        'Center', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=11, leading=14,
+        textColor=colors.HexColor('#111827'), alignment=1
+    )
+    center_bold_style = ParagraphStyle(
+        'CenterBold', parent=center_style,
+        fontName='Helvetica-Bold'
+    )
+    name_style = ParagraphStyle(
+        'Name', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=18, leading=22,
+        textColor=colors.HexColor('#1d4ed8'), alignment=1
+    )
+    heading_style = ParagraphStyle(
+        'Heading', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=14, leading=17,
+        textColor=colors.HexColor('#111827'), spaceAfter=6
+    )
+    skill_cat_style = ParagraphStyle(
+        'SkillCat', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=12, leading=15,
+        textColor=colors.HexColor('#111827')
+    )
+    body_style = ParagraphStyle(
+        'Body', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=11, leading=14,
+        textColor=colors.HexColor('#111827'), alignment=4
+    )
+    body_bold_style = ParagraphStyle(
+        'BodyBold', parent=body_style,
+        fontName='Helvetica-Bold'
+    )
+    small_style = ParagraphStyle(
+        'Small', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=11, leading=14,
+        textColor=colors.HexColor('#4b5563'), alignment=1
+    )
+    bullet_style = ParagraphStyle(
+        'Bullet', parent=body_style,
+        leftIndent=18, bulletIndent=6, spaceBefore=1, spaceAfter=1
+    )
+    project_title_style = ParagraphStyle(
+        'ProjectTitle', parent=styles['Normal'],
+        fontName='Helvetica-Bold', fontSize=12, leading=15,
+        textColor=colors.HexColor('#111827')
+    )
+    project_link_style = ParagraphStyle(
+        'ProjectLink', parent=styles['Normal'],
+        fontName='Helvetica', fontSize=11, leading=14,
+        textColor=colors.HexColor('#1d4ed8'), alignment=1
+    )
 
     story = []
 
+    # Header - Name centered
     name = data['personal'].get('full_name') or 'Your Name'
-    story.append(Paragraph(name, title_style))
+    story.append(Paragraph(name, name_style))
 
+    # Contact info line - centered with pipes
     contact_parts = []
-    if data['personal'].get('location'):
-        contact_parts.append(data['personal'].get('location'))
-
-    if data['personal'].get('email'):
-        contact_parts.append(data['personal'].get('email'))
-
     if data['personal'].get('phone'):
         contact_parts.append(data['personal'].get('phone'))
+    if data['personal'].get('email'):
+        contact_parts.append(data['personal'].get('email'))
+    if data['personal'].get('location'):
+        contact_parts.append(data['personal'].get('location'))
+    if contact_parts:
+        story.append(Paragraph(' | '.join(contact_parts), center_style))
 
-    story.append(Paragraph(' | '.join(contact_parts), small_style))
-
+    # Links line - centered with clickable links
     links = []
     if data['personal'].get('linkedin'):
-        links.append(f"LinkedIn: {data['personal'].get('linkedin')}")
-
+        url = data['personal'].get('linkedin')
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        links.append(f'<a href="{url}" color="#1d4ed8">LinkedIn</a>')
     if data['personal'].get('github'):
-        links.append(f"GitHub: {data['personal'].get('github')}")
-
+        url = data['personal'].get('github')
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        links.append(f'<a href="{url}" color="#1d4ed8">GitHub</a>')
     if data['personal'].get('portfolio'):
-        links.append(f"Portfolio: {data['personal'].get('portfolio')}")
-
+        url = data['personal'].get('portfolio')
+        if not url.startswith(('http://', 'https://')):
+            url = 'https://' + url
+        links.append(f'<a href="{url}" color="#1d4ed8">Portfolio</a>')
     if links:
-        story.append(Paragraph(' • '.join(links), small_style))
+        story.append(Paragraph(' | '.join(links), center_style))
 
-    story.append(Spacer(1, 8))
-    story.append(Paragraph('PROFESSIONAL SUMMARY', heading_style))
-    story.append(Paragraph(generated_summary, body_style))
-    story.append(Spacer(1, 8))
+    story.append(Spacer(1, 6))
 
-    story.append(Paragraph('PROFESSIONAL SKILLS', heading_style))
-    for category in data.get('skill_categories', []):
-        if category.get('items'):
+    # PROFESSIONAL SUMMARY
+    if generated_summary and generated_summary.strip():
+        story.append(Paragraph('PROFESSIONAL SUMMARY', heading_style))
+        story.append(Paragraph(generated_summary, body_style))
+        story.append(Spacer(1, 6))
+
+    # TECHNICAL SKILLS
+    skill_cats = [c for c in data.get('skill_categories', []) if c.get('items', '').strip()]
+    if skill_cats:
+        story.append(Paragraph('TECHNICAL SKILLS', heading_style))
+        for category in skill_cats:
             story.append(Paragraph(f"<b>{category.get('category')}</b>: {category.get('items')}", body_style))
+        story.append(Spacer(1, 6))
 
-    if not data.get('skill_categories'):
-        story.append(Paragraph('<b>Communication</b>: Communication, Problem Solving', body_style))
+    # PROJECTS
+    projects = [p for p in data.get('projects', []) if p.get('title', '').strip() or p.get('description', '').strip()]
+    if projects:
+        story.append(Paragraph('PROJECTS', heading_style))
+        for project in projects:
+            # Title on left, Source Code on right
+            title = project.get('title') or 'Project'
+            source_code = project.get('source_code_link', '').strip()
+            if source_code:
+                if not source_code.startswith(('http://', 'https://')):
+                    source_code = 'https://' + source_code
+                title_html = f'<b>{title}</b>'
+                # Use a table-like approach with left/right alignment via font tags
+                story.append(Paragraph(
+                    f'<font face="Helvetica-Bold" size="12">{title}</font>'
+                    f'<font face="Helvetica" size="12" color="#1d4ed8">'
+                    f'<a href="{source_code}">[Source Code]</a></font>',
+                    project_title_style
+                ))
+            else:
+                story.append(Paragraph(f'<b>{title}</b>', project_title_style))
 
-    story.append(Spacer(1, 8))
-    story.append(Paragraph('PROJECTS', heading_style))
-
-    for project in data.get('projects', []):
-        if not project.get('title') and not project.get('description'):
-            continue
-
-        title_parts = [f"<b>{project.get('title') or 'Project'}</b>"]
-        if project.get('source_code_link'):
-            title_parts.append(" <b>[Source Code]</b>")
-
-        story.append(Paragraph(''.join(title_parts), body_style))
-
-        if project.get('description'):
-            bullets = []
-            for line in project.get('description').splitlines():
-                line = line.strip()
-                if line:
-                    bullets.append(line)
-
-            if not bullets:
-                bullets = [project.get('description').strip()]
-
-            story.append(
-                ListFlowable(
-                    [ListItem(Paragraph(f"• {b}", bullet_style), bulletColor=colors.HexColor('#2563eb')) for b in bullets],
-                    bulletType='bullet',
+            # Description as bullet points
+            desc = project.get('description', '').strip()
+            if desc:
+                bullets = []
+                for line in desc.splitlines():
+                    line = line.strip()
+                    if line:
+                        bullets.append(line)
+                if not bullets:
+                    bullets = [desc]
+                story.append(
+                    ListFlowable(
+                        [ListItem(Paragraph(f"• {b}", bullet_style), bulletColor=colors.HexColor('#2563eb')) for b in bullets],
+                        bulletType='bullet',
+                    )
                 )
-            )
 
-        links = []
-        if project.get('source_code_link'):
-            links.append(f"[Source Code] {project.get('source_code_link')}")
-
-        if project.get('project_link'):
-            links.append(f"Project Link: {project.get('project_link')}")
-
-        if links:
-            story.append(Paragraph(' • '.join(links), small_style))
-
-        story.append(Spacer(1, 4))
-
-    if not data.get('projects'):
-        story.append(Paragraph('No project details entered', body_style))
-
-    story.append(Spacer(1, 8))
-    story.append(Paragraph('EDUCATION', heading_style))
-
-    for education in data.get('education', []):
-        if not education.get('institution') and not education.get('degree'):
-            continue
-
-        story.append(Paragraph(f"<b>{education.get('degree') or 'Degree'}</b> — {education.get('institution') or 'Institution'} | <b>Graduated</b>: {education.get('period')}", body_style))
-        if education.get('gpa_cgpa') or education.get('gpa_max'):
-            gpa_text = f"CGPA/GPA: {education.get('gpa_cgpa')}"
-
-            if education.get('gpa_max'):
-                gpa_text += f" / {education.get('gpa_max')}"
-
-            story.append(Paragraph(gpa_text, small_style))
-
-        if education.get('details'):
-            story.append(Paragraph(education.get('details'), body_style))
-
-        story.append(Spacer(1, 4))
-
-    if not data.get('education'):
-        story.append(Paragraph('No education details entered', body_style))
-
-    story.append(Spacer(1, 8))
-    story.append(Paragraph('EXPERIENCE', heading_style))
-
-    for experience in data.get('experience', []):
-        if not experience.get('company') and not experience.get('role'):
-            continue
-
-        story.append(Paragraph(f"<b>{experience.get('role') or 'Role'}</b> @ {experience.get('company') or 'Company'}", body_style))
-        if experience.get('period'):
-            story.append(Paragraph(experience.get('period'), small_style))
-
-        responsibilities = [item.strip() for item in experience.get('responsibilities', '').split('\n') if item.strip()]
-        if responsibilities:
-            story.append(
-                ListFlowable(
-                    [ListItem(Paragraph(f"• {item}", bullet_style), bulletColor=colors.HexColor('#2563eb')) for item in responsibilities],
-                    bulletType='bullet',
-                )
-            )
-
-        story.append(Spacer(1, 4))
-
-    if not data.get('experience'):
-        story.append(Paragraph('No experience details entered', body_style))
-
-    # certifications
-    if data.get('certifications'):
-        story.append(Spacer(1, 8))
-        story.append(Paragraph('CERTIFICATIONS', heading_style))
-
-        for cert in data.get('certifications', []):
-            if not cert.get('name') and not cert.get('issuer'):
-                continue
-
-            cert_parts = [f"<b>{cert.get('name') or 'Certification'}</b> — {cert.get('issuer') or 'Issuer'}"]
-            if cert.get('date'):
-                cert_parts.append(f" | <b>Issued</b>: {cert.get('date')}")
-
-            if cert.get('expiration'):
-                cert_parts.append(f" | <b>Expires</b>: {cert.get('expiration')}")
-            
-            if cert.get('credential_id'):
-                cert_parts.append(f" | <b>Credential ID</b>: {cert.get('credential_id')}")
-
-            story.append(Paragraph(''.join(cert_parts), body_style))
-            if cert.get('credential_url'):
-                story.append(Paragraph(f"Verify: {cert.get('credential_url')}", small_style))
+            # Project link at bottom
+            proj_link = project.get('project_link', '').strip()
+            if proj_link:
+                if not proj_link.startswith(('http://', 'https://')):
+                    proj_link = 'https://' + proj_link
+                story.append(Paragraph(
+                    f'Project Link: <a href="{proj_link}" color="#1d4ed8">{proj_link}</a>',
+                    project_link_style
+                ))
 
             story.append(Spacer(1, 4))
+        story.append(Spacer(1, 6))
 
-    # honors & awards
-    if data.get('honors_awards'):
-        story.append(Spacer(1, 8))
+    # EDUCATION
+    education_list = [e for e in data.get('education', []) if e.get('degree', '').strip() or e.get('institution', '').strip()]
+    if education_list:
+        story.append(Paragraph('EDUCATION', heading_style))
+        for edu in education_list:
+            degree = edu.get('degree', '').strip()
+            institution = edu.get('institution', '').strip()
+            period = edu.get('period', '').strip()
+            gpa = edu.get('gpa_cgpa', '').strip()
+            gpa_max = edu.get('gpa_max', '').strip()
+            details = edu.get('details', '').strip()
+
+            if degree and institution:
+                story.append(Paragraph(f'<b>{degree}</b> | {institution} | <b>Graduated</b>: {period}', body_style))
+            elif degree:
+                story.append(Paragraph(f'<b>{degree}</b> | <b>Graduated</b>: {period}', body_style))
+            elif institution:
+                story.append(Paragraph(f'{institution} | <b>Graduated</b>: {period}', body_style))
+
+            if gpa or gpa_max:
+                gpa_text = f"CGPA/GPA: {gpa}"
+                if gpa_max:
+                    gpa_text += f" / {gpa_max}"
+                story.append(Paragraph(gpa_text, body_style))
+
+            if details:
+                story.append(Paragraph(details, body_style))
+
+            story.append(Spacer(1, 4))
+        story.append(Spacer(1, 6))
+
+    # EXPERIENCE
+    experience_list = [e for e in data.get('experience', []) if e.get('company', '').strip() or e.get('role', '').strip()]
+    if experience_list:
+        story.append(Paragraph('EXPERIENCE', heading_style))
+        for exp in experience_list:
+            company = exp.get('company', '').strip()
+            role = exp.get('role', '').strip()
+            period = exp.get('period', '').strip()
+            responsibilities = exp.get('responsibilities', '').strip()
+
+            if company and role:
+                story.append(Paragraph(f'<b>{role}</b> @ {company}', body_bold_style))
+            elif role:
+                story.append(Paragraph(f'<b>{role}</b>', body_bold_style))
+            elif company:
+                story.append(Paragraph(f'<b>{company}</b>', body_bold_style))
+
+            if period:
+                story.append(Paragraph(period, small_style))
+
+            if responsibilities:
+                resp_items = [item.strip() for item in responsibilities.split('\n') if item.strip()]
+                if resp_items:
+                    story.append(
+                        ListFlowable(
+                            [ListItem(Paragraph(f"• {item}", bullet_style), bulletColor=colors.HexColor('#2563eb')) for item in resp_items],
+                            bulletType='bullet',
+                        )
+                    )
+
+            story.append(Spacer(1, 4))
+        story.append(Spacer(1, 6))
+
+    # CERTIFICATIONS
+    certs = [c for c in data.get('certifications', []) if c.get('name', '').strip() or c.get('issuer', '').strip()]
+    if certs:
+        story.append(Paragraph('CERTIFICATIONS', heading_style))
+        for cert in certs:
+            name = cert.get('name', '').strip()
+            issuer = cert.get('issuer', '').strip()
+            date = cert.get('date', '').strip()
+            cred_id = cert.get('credential_id', '').strip()
+            cred_url = cert.get('credential_url', '').strip()
+
+            if name and issuer and date:
+                story.append(Paragraph(f'<b>{name}</b> | {issuer} | <b>Issued</b>: {date}', body_style))
+            elif name and issuer:
+                story.append(Paragraph(f'<b>{name}</b> | {issuer}', body_style))
+            elif name:
+                story.append(Paragraph(f'<b>{name}</b>', body_style))
+
+            # Credential ID and Verify on same line
+            cred_parts = []
+            if cred_id:
+                cred_parts.append(f'<b>Credential ID</b>: {cred_id}')
+            if cred_url:
+                if not cred_url.startswith(('http://', 'https://')):
+                    cred_url = 'https://' + cred_url
+                cred_parts.append(f'<a href="{cred_url}" color="#1d4ed8">Verify</a>')
+            if cred_parts:
+                story.append(Paragraph(' | '.join(cred_parts), body_style))
+
+            story.append(Spacer(1, 4))
+        story.append(Spacer(1, 6))
+
+    # HONORS & AWARDS
+    honors = [h for h in data.get('honors_awards', []) if h.get('title', '').strip() or h.get('issuer', '').strip()]
+    if honors:
         story.append(Paragraph('HONORS & AWARDS', heading_style))
+        for honor in honors:
+            title = honor.get('title', '').strip()
+            issuer = honor.get('issuer', '').strip()
+            date = honor.get('date', '').strip()
+            desc = honor.get('description', '').strip()
 
-        for honor in data.get('honors_awards', []):
-            if not honor.get('title') and not honor.get('issuer'):
-                continue
+            if title and issuer and date:
+                story.append(Paragraph(f'<b>{title}</b> — {issuer} | <b>Date</b>: {date}', body_style))
+            elif title and issuer:
+                story.append(Paragraph(f'<b>{title}</b> — {issuer}', body_style))
+            elif title:
+                story.append(Paragraph(f'<b>{title}</b>', body_style))
 
-            honor_parts = [f"<b>{honor.get('title') or 'Award'}</b> — {honor.get('issuer') or 'Issuer'}"]
-            if honor.get('date'):
-                honor_parts.append(f" | <b>Date</b>: {honor.get('date')}")
-
-            story.append(Paragraph(''.join(honor_parts), body_style))
-            if honor.get('description'):
-                story.append(Paragraph(honor.get('description'), body_style))
+            if desc:
+                story.append(Paragraph(desc, body_style))
 
             story.append(Spacer(1, 4))
 
@@ -630,208 +720,374 @@ def download_pdf(request):
     return response
 
 
+def _add_hyperlink(paragraph, text, url):
+    """Add a clickable hyperlink to a paragraph in python-docx."""
+    part = paragraph.part
+    r_id = part.relate_to(url, 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink', is_external=True)
+
+    hyperlink = parse_xml(f'<w:hyperlink {nsdecls("w")} r:id="{r_id}"><w:r><w:rPr><w:color w:val="1d4ed8"/><w:u w:val="single"/></w:rPr><w:t>{text}</w:t></w:r></w:hyperlink>')
+    paragraph._p.append(hyperlink)
+
+
 def download_docx(request):
     data = _get_builder_data(request)
+    generated_summary = _generate_summary(data)
+
     document = Document()
 
+    # Set 0.5 inch margins
+    for section in document.sections:
+        section.top_margin = Inches(0.5)
+        section.bottom_margin = Inches(0.5)
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+
+    # Default style
     style = document.styles['Normal']
     font = style.font
     font.name = 'Calibri'
     font.size = Pt(11)
     font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+    style.paragraph_format.space_after = Pt(0)
+    style.paragraph_format.space_before = Pt(0)
+    style.paragraph_format.line_spacing = Pt(14)
 
-    # name
-    heading = document.add_heading(data['personal'].get('full_name') or 'Your Name', level=0)
-    heading.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    # Helper to add a heading
+    def add_section_heading(text):
+        heading = document.add_heading(text, level=1)
+        heading.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        for run in heading.runs:
+            run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
+            run.font.size = Pt(14)
+            run.font.name = 'Calibri'
+        heading.paragraph_format.space_after = Pt(6)
+        heading.paragraph_format.space_before = Pt(0)
+        return heading
 
-    for run in heading.runs:
-        run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
-        run.font.size = Pt(24)
+    def add_centered_paragraph(text, bold=False, size=Pt(11), color=RGBColor(0x14, 0x21, 0x3D)):
+        p = document.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.paragraph_format.space_after = Pt(0)
+        p.paragraph_format.space_before = Pt(0)
+        p.paragraph_format.line_spacing = Pt(14)
+        run = p.add_run(text)
+        run.font.name = 'Calibri'
+        run.font.size = size
+        run.font.bold = bold
+        run.font.color.rgb = color
+        return p
 
-    # contact info
+    def add_justified_paragraph(text, bold=False, size=Pt(11), color=RGBColor(0x14, 0x21, 0x3D), space_after=Pt(0), space_before=Pt(0)):
+        p = document.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p.paragraph_format.space_after = space_after
+        p.paragraph_format.space_before = space_before
+        p.paragraph_format.line_spacing = Pt(14)
+        run = p.add_run(text)
+        run.font.name = 'Calibri'
+        run.font.size = size
+        run.font.bold = bold
+        run.font.color.rgb = color
+        return p
+
+    def add_bullet_point(text):
+        p = document.add_paragraph(style='List Bullet')
+        p.paragraph_format.space_after = Pt(1)
+        p.paragraph_format.space_before = Pt(1)
+        p.paragraph_format.line_spacing = Pt(14)
+        p.paragraph_format.left_indent = Inches(0.25)
+        run = p.add_run(text)
+        run.font.name = 'Calibri'
+        run.font.size = Pt(11)
+        run.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+        return p
+
+    def add_body_bold_then_normal(bold_text, normal_text, space_after=Pt(0)):
+        p = document.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        p.paragraph_format.space_after = space_after
+        p.paragraph_format.space_before = Pt(0)
+        p.paragraph_format.line_spacing = Pt(14)
+        run_b = p.add_run(bold_text)
+        run_b.font.name = 'Calibri'
+        run_b.font.size = Pt(11)
+        run_b.font.bold = True
+        run_b.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+        run_n = p.add_run(normal_text)
+        run_n.font.name = 'Calibri'
+        run_n.font.size = Pt(11)
+        run_n.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+        return p
+
+    # ===== HEADER =====
+    name = data['personal'].get('full_name') or 'Your Name'
+    p = document.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_after = Pt(2)
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.line_spacing = Pt(22)
+    run = p.add_run(name)
+    run.font.name = 'Calibri'
+    run.font.size = Pt(18)
+    run.font.bold = True
+    run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
+
+    # Contact line
     contact_parts = []
-    if data['personal'].get('location'):
-        contact_parts.append(data['personal'].get('location'))
-
-    if data['personal'].get('email'):
-        contact_parts.append(data['personal'].get('email'))
-
     if data['personal'].get('phone'):
         contact_parts.append(data['personal'].get('phone'))
+    if data['personal'].get('email'):
+        contact_parts.append(data['personal'].get('email'))
+    if data['personal'].get('location'):
+        contact_parts.append(data['personal'].get('location'))
+    if contact_parts:
+        add_centered_paragraph(' | '.join(contact_parts), size=Pt(11), color=RGBColor(0x4B, 0x55, 0x63))
 
-    p = document.add_paragraph(' | '.join(contact_parts))
-    p.style.font.size = Pt(10)
-    p.style.font.color.rgb = RGBColor(0x4B, 0x55, 0x63)
-
+    # Links line with clickable hyperlinks
     links = []
     if data['personal'].get('linkedin'):
-        links.append(f"LinkedIn: {data['personal'].get('linkedin')}")
-
+        links.append(('LinkedIn', data['personal'].get('linkedin')))
     if data['personal'].get('github'):
-        links.append(f"GitHub: {data['personal'].get('github')}")
-
+        links.append(('GitHub', data['personal'].get('github')))
     if data['personal'].get('portfolio'):
-        links.append(f"Portfolio: {data['personal'].get('portfolio')}")
+        links.append(('Portfolio', data['personal'].get('portfolio')))
 
     if links:
-        p = document.add_paragraph(' • '.join(links))
-        p.style.font.size = Pt(10)
-        p.style.font.color.rgb = RGBColor(0x4B, 0x55, 0x63)
+        p = document.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.paragraph_format.space_after = Pt(6)
+        p.paragraph_format.space_before = Pt(0)
+        p.paragraph_format.line_spacing = Pt(14)
+        for i, (label, url) in enumerate(links):
+            if not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            if i > 0:
+                run = p.add_run(' | ')
+                run.font.name = 'Calibri'
+                run.font.size = Pt(11)
+                run.font.color.rgb = RGBColor(0x4B, 0x55, 0x63)
+            _add_hyperlink(p, label, url)
+            # The hyperlink function already styles the text
 
-    document.add_paragraph()  # spacer
+    # ===== PROFESSIONAL SUMMARY =====
+    if generated_summary and generated_summary.strip():
+        add_section_heading('PROFESSIONAL SUMMARY')
+        add_justified_paragraph(generated_summary, space_after=Pt(6))
 
-    # professional Summary
-    heading = document.add_heading('PROFESSIONAL SUMMARY', level=1)
-    for run in heading.runs:
-        run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
-        run.font.size = Pt(14)
-
-    document.add_paragraph(_generate_summary(data))
-
-    # professional Skills
-    heading = document.add_heading('PROFESSIONAL SKILLS', level=1)
-    for run in heading.runs:
-        run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
-        run.font.size = Pt(14)
-
-    for category in data.get('skill_categories', []):
-        if category.get('items'):
-            p = document.add_paragraph()
-            run = p.add_run(f"- {category.get('category')}: ")
-            run.bold = True
-            p.add_run(category.get('items'))
-
-    # projects
-    heading = document.add_heading('PROJECTS', level=1)
-    for run in heading.runs:
-        run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
-        run.font.size = Pt(14)
-
-    for project in data.get('projects', []):
-        if project.get('title') or project.get('description'):
-            p = document.add_paragraph()
-            run = p.add_run(project.get('title') or 'Project')
-            run.bold = True
-
-            if project.get('source_code_link'):
-                run2 = p.add_run(' [Source Code]')
-                run2.bold = True
-
-            if project.get('description'):
-                lines = [ln.strip() for ln in project.get('description').splitlines() if ln.strip()]
-                if not lines:
-                    lines = [project.get('description').strip()]
-
-                for b in lines:
-                    document.add_paragraph(b, style='List Bullet')
-
-            link_parts = []
-
-            if project.get('source_code_link'):
-                link_parts.append(f"[Source Code] {project.get('source_code_link')}")
-
-            if project.get('project_link'):
-                link_parts.append(f"Project Link: {project.get('project_link')}")
-
-            if link_parts:
-                p = document.add_paragraph(' • '.join(link_parts))
-                p.style.font.size = Pt(9)
-                p.style.font.color.rgb = RGBColor(0x4B, 0x55, 0x63)
-
-    # education
-    heading = document.add_heading('EDUCATION', level=1)
-    for run in heading.runs:
-        run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
-        run.font.size = Pt(14)
-
-    for education in data.get('education', []):
-        if education.get('institution') or education.get('degree'):
-            degree = education.get('degree') or 'Degree'
-            inst = education.get('institution') or 'Institution'
-            year = education.get('period') or ''
-            p = document.add_paragraph()
-            run = p.add_run(f"{degree} | {inst} | Graduated: {year}")
-            run.bold = True
-
-            gpa = education.get('gpa_cgpa')
-            gmax = education.get('gpa_max')
-
-            if gpa or gmax:
-                if gmax:
-                    document.add_paragraph(f"CGPA/GPA: {gpa} / {gmax}")
-
-                else:
-                    document.add_paragraph(f"CGPA/GPA: {gpa}")
-
-            if education.get('details'):
-                document.add_paragraph(education.get('details'))
-
-    # Experience
-    heading = document.add_heading('EXPERIENCE', level=1)
-    for run in heading.runs:
-        run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
-        run.font.size = Pt(14)
-
-    for experience in data.get('experience', []):
-        if experience.get('company') or experience.get('role'):
-            p = document.add_paragraph()
-            run = p.add_run(f"{experience.get('role') or 'Role'} @ {experience.get('company') or 'Company'}")
-            run.bold = True
-            if experience.get('period'):
-                document.add_paragraph(experience.get('period'))
-
-            for responsibility in [item.strip() for item in experience.get('responsibilities', '').split('\n') if item.strip()]:
-                document.add_paragraph(responsibility, style='List Bullet')
-
-    # certifications
-    if data.get('certifications'):
-        heading = document.add_heading('CERTIFICATIONS', level=1)
-        for run in heading.runs:
-            run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
-            run.font.size = Pt(14)
-
-        for cert in data.get('certifications', []):
-            if cert.get('name') or cert.get('issuer'):
+    # ===== TECHNICAL SKILLS =====
+    skill_cats = [c for c in data.get('skill_categories', []) if c.get('items', '').strip()]
+    if skill_cats:
+        add_section_heading('TECHNICAL SKILLS')
+        for category in skill_cats:
+            cat_name = category.get('category', '').strip()
+            cat_items = category.get('items', '').strip()
+            if cat_name and cat_items:
                 p = document.add_paragraph()
-                run = p.add_run(f"{cert.get('name') or 'Certification'} — {cert.get('issuer') or 'Issuer'}")
-                run.bold = True
+                p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                p.paragraph_format.space_after = Pt(0)
+                p.paragraph_format.line_spacing = Pt(14)
+                run_b = p.add_run(cat_name + ': ')
+                run_b.font.name = 'Calibri'
+                run_b.font.size = Pt(12)
+                run_b.font.bold = True
+                run_b.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+                run_n = p.add_run(cat_items)
+                run_n.font.name = 'Calibri'
+                run_n.font.size = Pt(11)
+                run_n.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+        add_justified_paragraph('', space_after=Pt(6))  # spacer
 
-                details = []
-                if cert.get('date'):
-                    details.append(f"Issued: {cert.get('date')}")
+    # ===== PROJECTS =====
+    projects = [p for p in data.get('projects', []) if p.get('title', '').strip() or p.get('description', '').strip()]
+    if projects:
+        add_section_heading('PROJECTS')
+        for project in projects:
+            title = project.get('title', '').strip() or 'Project'
+            source_code = project.get('source_code_link', '').strip()
+            description = project.get('description', '').strip()
+            project_link = project.get('project_link', '').strip()
 
-                if cert.get('expiration'):
-                    details.append(f"Expires: {cert.get('expiration')}")
-
-                if cert.get('credential_id'):
-                    details.append(f"Credential ID: {cert.get('credential_id')}")
-                
-                if details:
-                    document.add_paragraph(' | '.join(details))
-
-                if cert.get('credential_url'):
-                    p = document.add_paragraph(f"Verify: {cert.get('credential_url')}")
-                    p.style.font.size = Pt(9)
-                    p.style.font.color.rgb = RGBColor(0x4B, 0x55, 0x63)
-
-    # honors & awards
-    if data.get('honors_awards'):
-        heading = document.add_heading('HONORS & AWARDS', level=1)
-        for run in heading.runs:
-            run.font.color.rgb = RGBColor(0x1D, 0x4E, 0xD8)
-            run.font.size = Pt(14)
-
-        for honor in data.get('honors_awards', []):
-            if honor.get('title') or honor.get('issuer'):
+            # Title line with source code on right
+            if source_code:
+                if not source_code.startswith(('http://', 'https://')):
+                    source_code = 'https://' + source_code
                 p = document.add_paragraph()
-                run = p.add_run(f"{honor.get('title') or 'Award'} — {honor.get('issuer') or 'Issuer'}")
-                run.bold = True
+                p.paragraph_format.space_after = Pt(0)
+                p.paragraph_format.space_before = Pt(0)
+                p.paragraph_format.line_spacing = Pt(15)
+                run_title = p.add_run(title)
+                run_title.font.name = 'Calibri'
+                run_title.font.size = Pt(12)
+                run_title.font.bold = True
+                run_title.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+                # Add spacing to push source code to right
+                run_spacer = p.add_run('\t')
+                run_spacer.font.size = Pt(12)
+                _add_hyperlink(p, '[Source Code]', source_code)
+            else:
+                add_justified_paragraph(title, bold=True, size=Pt(12), space_after=Pt(0))
 
-                if honor.get('date'):
-                    document.add_paragraph(honor.get('date'))
+            # Description as bullet points
+            if description:
+                bullets = [line.strip() for line in description.splitlines() if line.strip()]
+                if not bullets:
+                    bullets = [description]
+                for bullet in bullets:
+                    add_bullet_point(bullet)
 
-                if honor.get('description'):
-                    document.add_paragraph(honor.get('description'))
+            # Project link at bottom
+            if project_link:
+                if not project_link.startswith(('http://', 'https://')):
+                    project_link = 'https://' + project_link
+                p = document.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                p.paragraph_format.space_after = Pt(4)
+                p.paragraph_format.space_before = Pt(0)
+                p.paragraph_format.line_spacing = Pt(14)
+                run = p.add_run('Project Link: ')
+                run.font.name = 'Calibri'
+                run.font.size = Pt(11)
+                run.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+                _add_hyperlink(p, project_link, project_link)
+
+            add_justified_paragraph('', space_after=Pt(4))
+        add_justified_paragraph('', space_after=Pt(6))
+
+    # ===== EDUCATION =====
+    education_list = [e for e in data.get('education', []) if e.get('degree', '').strip() or e.get('institution', '').strip()]
+    if education_list:
+        add_section_heading('EDUCATION')
+        for edu in education_list:
+            degree = edu.get('degree', '').strip()
+            institution = edu.get('institution', '').strip()
+            period = edu.get('period', '').strip()
+            gpa = edu.get('gpa_cgpa', '').strip()
+            gpa_max = edu.get('gpa_max', '').strip()
+            details = edu.get('details', '').strip()
+
+            if degree and institution:
+                add_body_bold_then_normal(f'{degree} | {institution} | Graduated: {period}', '', space_after=Pt(0))
+            elif degree:
+                add_body_bold_then_normal(f'{degree} | Graduated: {period}', '', space_after=Pt(0))
+            elif institution:
+                add_body_bold_then_normal(f'{institution} | Graduated: {period}', '', space_after=Pt(0))
+
+            if gpa or gpa_max:
+                gpa_text = f'CGPA/GPA: {gpa}'
+                if gpa_max:
+                    gpa_text += f' / {gpa_max}'
+                add_justified_paragraph(gpa_text, space_after=Pt(0))
+
+            if details:
+                add_justified_paragraph(details, space_after=Pt(0))
+
+            add_justified_paragraph('', space_after=Pt(4))
+        add_justified_paragraph('', space_after=Pt(6))
+
+    # ===== EXPERIENCE =====
+    experience_list = [e for e in data.get('experience', []) if e.get('company', '').strip() or e.get('role', '').strip()]
+    if experience_list:
+        add_section_heading('EXPERIENCE')
+        for exp in experience_list:
+            company = exp.get('company', '').strip()
+            role = exp.get('role', '').strip()
+            period = exp.get('period', '').strip()
+            responsibilities = exp.get('responsibilities', '').strip()
+
+            if company and role:
+                add_justified_paragraph(f'{role} @ {company}', bold=True, size=Pt(12), space_after=Pt(0))
+            elif role:
+                add_justified_paragraph(role, bold=True, size=Pt(12), space_after=Pt(0))
+            elif company:
+                add_justified_paragraph(company, bold=True, size=Pt(12), space_after=Pt(0))
+
+            if period:
+                add_justified_paragraph(period, size=Pt(11), color=RGBColor(0x4B, 0x55, 0x63), space_after=Pt(0))
+
+            if responsibilities:
+                resp_items = [item.strip() for item in responsibilities.split('\n') if item.strip()]
+                for item in resp_items:
+                    add_bullet_point(item)
+
+            add_justified_paragraph('', space_after=Pt(4))
+        add_justified_paragraph('', space_after=Pt(6))
+
+    # ===== CERTIFICATIONS =====
+    certs = [c for c in data.get('certifications', []) if c.get('name', '').strip() or c.get('issuer', '').strip()]
+    if certs:
+        add_section_heading('CERTIFICATIONS')
+        for cert in certs:
+            name = cert.get('name', '').strip()
+            issuer = cert.get('issuer', '').strip()
+            date = cert.get('date', '').strip()
+            cred_id = cert.get('credential_id', '').strip()
+            cred_url = cert.get('credential_url', '').strip()
+
+            if name and issuer and date:
+                add_justified_paragraph(f'{name} | {issuer} | Issued: {date}', bold=False, space_after=Pt(0))
+            elif name and issuer:
+                add_justified_paragraph(f'{name} | {issuer}', bold=False, space_after=Pt(0))
+            elif name:
+                add_justified_paragraph(name, bold=False, space_after=Pt(0))
+
+            # Credential ID and Verify on same line
+            cred_parts = []
+            if cred_id:
+                cred_parts.append(('Credential ID: ', cred_id, False))
+            if cred_url:
+                if not cred_url.startswith(('http://', 'https://')):
+                    cred_url = 'https://' + cred_url
+                cred_parts.append(('Verify', cred_url, True))
+
+            if cred_parts:
+                p = document.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+                p.paragraph_format.space_after = Pt(4)
+                p.paragraph_format.space_before = Pt(0)
+                p.paragraph_format.line_spacing = Pt(14)
+                for i, (label, value, is_link) in enumerate(cred_parts):
+                    if i > 0:
+                        run = p.add_run(' | ')
+                        run.font.name = 'Calibri'
+                        run.font.size = Pt(11)
+                        run.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+                    if is_link:
+                        _add_hyperlink(p, value, value)
+                    else:
+                        run_l = p.add_run(label)
+                        run_l.font.name = 'Calibri'
+                        run_l.font.size = Pt(11)
+                        run_l.font.bold = True
+                        run_l.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+                        run_v = p.add_run(value)
+                        run_v.font.name = 'Calibri'
+                        run_v.font.size = Pt(11)
+                        run_v.font.color.rgb = RGBColor(0x14, 0x21, 0x3D)
+
+            add_justified_paragraph('', space_after=Pt(4))
+        add_justified_paragraph('', space_after=Pt(6))
+
+    # ===== HONORS & AWARDS =====
+    honors = [h for h in data.get('honors_awards', []) if h.get('title', '').strip() or h.get('issuer', '').strip()]
+    if honors:
+        add_section_heading('HONORS & AWARDS')
+        for honor in honors:
+            title = honor.get('title', '').strip()
+            issuer = honor.get('issuer', '').strip()
+            date = honor.get('date', '').strip()
+            desc = honor.get('description', '').strip()
+
+            if title and issuer and date:
+                add_justified_paragraph(f'{title} — {issuer} | Date: {date}', space_after=Pt(0))
+            elif title and issuer:
+                add_justified_paragraph(f'{title} — {issuer}', space_after=Pt(0))
+            elif title:
+                add_justified_paragraph(title, space_after=Pt(0))
+
+            if desc:
+                add_justified_paragraph(desc, space_after=Pt(0))
+
+            add_justified_paragraph('', space_after=Pt(4))
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
     response['Content-Disposition'] = 'attachment; filename="cv_guide_cv.docx"'
